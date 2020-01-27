@@ -2,8 +2,11 @@
 #include "Wire.h"
 #include "Ticker.h"
 #include "WiFi.h"
+#include "SPIFFS.h"
 #include "ESPmDNS.h"
+#include "ESPAsyncWebServer.h"
 #include "esp_wps.h"
+#include "ArduinoOTA.h"
 
 #define ESP_WPS_MODE      WPS_TYPE_PBC                                              //Для WPS
 #define ESP_MANUFACTURER  "ESPRESSIF"
@@ -13,7 +16,7 @@
 #define DEFAULT_SSID      "SKUD1001"
 #define DEFAULT_PASSWORD  "10012019-C"
 
-#define EEPROM_ADDRESS 0b1010000                                                    //GPIO21 и GPIO22 - IIC
+#define EEPROM_ADDRESS 0b1010000                                                    //GPIO21 (SDA) и GPIO22 (SCL) - IIC
 
 #define EEPROM_ADDRESS_CONF 0                                                       //Адреса памяти
 #define EEPROM_ADDRESS_WiFi 1
@@ -35,9 +38,11 @@ bool EEPROMWorking = false;                                                     
 bool WPSWorking = false;                                                            
 bool MDSNWorking = false;
 bool TimerWorking = false;
+bool SPIFFSWorking = false;
 
 Ticker Timer;
 static esp_wps_config_t config;
+AsyncWebServer server(80);
 
 //Прототипы функций
 void ConnectToWiFi(bool fromEEPROM = false);
@@ -47,26 +52,27 @@ void setup()
 {
     delay(5000);
 
+    /**/Serial.begin(115200);
     if (EEPROM_begin() != 0) {EEPROMWorking = false;}                               //Получение данных
     else 
     {
         /**/pinMode(2, OUTPUT);
         /**/digitalWrite(2, HIGH);
 
-        EEPROMWorking = true;
-        /**/EEPROM_update(EEPROM_ADDRESS_MDNS, "esp32");
-        /**/EEPROM_updatebyte(EEPROM_ADDRESS_MDNS + String("esp32").length(), 0x00);
-        /**/EEPROM_updatebyte(0, 0x00);
-        /**/EEPROM_updatebit(0, 1, true);
-        /**/EEPROM_updatebit(0, 2, true);
+        EEPROMWorking = true;        
         String temp_read = EEPROM_read(EEPROM_ADDRESS_CONF, EEPROM_SIZE_CONF);
         NeedAP = int(temp_read[0]) & 0b1;
         NeedSerial = int(temp_read[0]) & 0b10;
         Buzzer = int(temp_read[0]) & 0b100;
     }
-
     if (NeedSerial) {Serial.begin(115200);}                                         //Настройка Serial
     if (Buzzer) {ledcSetup(0, 2000, 8);}                                            //Настройка ШИМ для Buzzer'а
+
+    if(!SPIFFS.begin(true))                                                         //Файловая система для хранения сайта управления
+    {
+        Serial.println("При монтировании SPIFFS произошла ошибка");
+    }
+    else {SPIFFSWorking = true;}
 
     WiFi.mode(WIFI_STA);                                                            //Подключение к Wi-Fi используя данные EEPROM
     WiFi.disconnect();
@@ -102,7 +108,7 @@ void setup()
         }
     }
 
-    if (EEPROMWorking) 
+    if (EEPROMWorking & SPIFFSWorking) 
     {
         host = EEPROM_read(EEPROM_ADDRESS_MDNS, EEPROM_SIZE_MDNS);
         if (MDNS.begin(host.c_str())) 
@@ -111,12 +117,53 @@ void setup()
             MDSNWorking = true;
         }
     }
-    /**/EEPROM_printmap(0, 512, 16, true);
+
+    if (SPIFFSWorking) 
+    {
+        server.on("/", HTTP_GET, handleNotFound);                                   //Настройка маршрутизации сервера
+        server.onNotFound(handleNotFound);
+
+        server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
+            request->send(SPIFFS, "/style.css", "text/css");
+        });
+        server.on("/font-awsome all.css", HTTP_GET, [](AsyncWebServerRequest *request) {
+            request->send(SPIFFS, "/font-awsome all.css", "text/css");
+        });
+        server.on("/fa-solid-900.svg", HTTP_GET, [](AsyncWebServerRequest *request) {
+            request->send(SPIFFS, "/fa-solid-900.svg", "image/svg+xml");
+        });
+        server.on("/fa-solid-900.woff2", HTTP_GET, [](AsyncWebServerRequest *request) {
+            request->send(SPIFFS, "/fa-solid-900.woff2", "font/woff2");
+        });
+        server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+            request->send(SPIFFS, "/script.js", "text/javascript");
+        });
+
+        server.begin();
+        if (MDSNWorking) {MDNS.addService("http", "tcp", 80);}
+    }
+
+
+    //Обновление по сети
+    ArduinoOTA.onStart([]                                                           
+    {
+        String type;
+        if (ArduinoOTA.getCommand() == U_FLASH) {type = "sketch";}
+        else {type = "filesystem";}
+        if (SPIFFSWorking) {SPIFFS.end();}
+        /////////Дверь закрыть
+    });
+    ArduinoOTA.begin();
+    for (int i = 0; i <= 11111111; i++)
+    {
+        EEPROM_updatebyte(i, 0xFF);
+    }
+    
 }
 
 void loop()
 {
-
+    ArduinoOTA.handle();
 }
 
 //Работа с EEPROM
@@ -131,7 +178,7 @@ int EEPROM_begin()
 
 void EEPROM_update(int memory_address, String data)
 {
-
+    int code;
     char temp_char;
 
     for (int i = 0; i < data.length(); i++)
@@ -139,12 +186,14 @@ void EEPROM_update(int memory_address, String data)
         Wire.beginTransmission(EEPROM_ADDRESS);
         Wire.write((memory_address + i) >> 8);
         Wire.write((memory_address + i) & 0xFF);
-        Wire.endTransmission();
+        code = Wire.endTransmission() != 0;
+        if (code != 0) {Serial.println("Ошибка при отправке адресса для сравнения (" + data + ", " + data[i] + "): " + String(code));}
 
         Wire.beginTransmission(EEPROM_ADDRESS);
         Wire.requestFrom(memory_address + i, 1);
         temp_char = Wire.read();
-        Wire.endTransmission();        
+        code = Wire.endTransmission() != 0;
+        if (code != 0) {Serial.println("Ошибка при получении данных для сравнения (" + data + ", " + data[i] + "): " + String(code));}       
 
         if (temp_char != data[i]) 
         {
@@ -152,24 +201,28 @@ void EEPROM_update(int memory_address, String data)
             Wire.write((memory_address + i) >> 8);
             Wire.write((memory_address + i) & 0xFF);
             Wire.write(data[i]);
-            Wire.endTransmission();        
-            delay(7);
+            code = Wire.endTransmission() != 0;
+            if (code != 0) {Serial.println("Ошибка при отправке данных для записи (" + data + ", " + data[i] + "): " + String(code));}   
+            delay(10);
         }
-    } 
+    }
 }
 
 void EEPROM_updatebyte(int memory_address, byte data)
 {
+    int code;
     int temp;
 
     Wire.beginTransmission(EEPROM_ADDRESS);
     Wire.write(memory_address >> 8);
     Wire.write(memory_address & 0xFF);
-    Wire.endTransmission();
+    code = Wire.endTransmission() != 0;
+    if (code != 0) {Serial.println("Ошибка при отправке адресса для сравнения (" + String(data) + "): " + String(code));}   
 
     Wire.requestFrom(memory_address, 1);
     temp = Wire.read();
-    Wire.endTransmission();        
+    code = Wire.endTransmission() != 0;
+    if (code != 0) {Serial.println("Ошибка при получении данных для сравнения (" + String(data) + "): " + String(code));}         
 
     if (temp != data) 
     {
@@ -177,8 +230,9 @@ void EEPROM_updatebyte(int memory_address, byte data)
         Wire.write(memory_address >> 8);
         Wire.write(memory_address & 0xFF);
         Wire.write(data);
-        Wire.endTransmission();        
-        delay(7);
+        code = Wire.endTransmission() != 0;
+        if (code != 0) {Serial.println("Ошибка при отправке данных для записи (" + String(data) + "): " + String(code));}     
+        delay(10);
     }
 }
 
@@ -348,9 +402,9 @@ void ConnectToWiFi(bool fromEEPROM)
         WiFi.begin(ssid.c_str(), password.c_str());                                 //Подключение к Wi-Fi
         while (WiFi.status() != WL_CONNECTED & !NeedAP & !WPSWorking)               //Если пользователь решит использовать WPS или AP
         {
-            delay(2500);
+            delay(5000);
             Serial.println();
-            Serial.println("Попытка подключения к WiFi: " + String(WiFi.status()));
+            Serial.println("Попытка подключения к WiFi (" + ssid/**/ + ", " + password/**/ + "): " + String(WiFi.status()));
             if (fromEEPROM) break;
             if (WiFi.status() == 4 || WiFi.status() == 6)                           //В случае ошибки предлагать выбор - повторное подключение, либо изменение настроек
             {
@@ -374,10 +428,10 @@ void ConnectToWiFi(bool fromEEPROM)
                 {
                     int num = atoi(i.c_str()) - 1;
                     EEPROM_update(EEPROM_ADDRESS_WiFi + (32+64) * num, ssid);
-                    EEPROM_updatebyte(EEPROM_ADDRESS_AP + (32+64) * num + ssid.length(), 0x00);
-                    EEPROM_update(EEPROM_ADDRESS_AP + 32 + (32+64) * num, password);                 
-                    EEPROM_updatebyte(EEPROM_ADDRESS_AP + 32 + (32+64) * num + password.length(), 0x00);
-                    EEPROM_updatebit(EEPROM_ADDRESS_CONF, 1, true);
+                    EEPROM_updatebyte(EEPROM_ADDRESS_WiFi + (32+64) * num + ssid.length(), 0x00);
+                    EEPROM_update(EEPROM_ADDRESS_WiFi + 31 + (32+64) * num, password);                 
+                    EEPROM_updatebyte(EEPROM_ADDRESS_WiFi + 31 + (32+64) * num + password.length(), 0x00);
+                    EEPROM_updatebit(EEPROM_ADDRESS_CONF, 1, false);
                 }
             }
         }
@@ -518,6 +572,12 @@ void WPSInitConfig()
     strcpy(config.factory_info.model_number, ESP_MODEL_NUMBER);
     strcpy(config.factory_info.model_name, ESP_MODEL_NAME);
     strcpy(config.factory_info.device_name, ESP_DEVICE_NAME);
+}
+
+//Маршрутизация
+void handleNotFound(AsyncWebServerRequest *request)
+{
+    request->send(SPIFFS, "/NotFound.html", "text/html");
 }
 
 //Прерывания
