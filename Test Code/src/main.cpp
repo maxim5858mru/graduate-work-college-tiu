@@ -1,17 +1,11 @@
 #include "Arduino.h"
 #include "Wire.h"
 
+#define EEPROM_ADDRESS 0b1010000
+
 bool NeedSerial = true;
 
-void setup()
-{
-
-}
-
-void loop()
-{
-
-}
+bool begin(uint8_t address, int clock = 10000);
 
 class EEPROM
 {
@@ -20,14 +14,14 @@ public:
     bool broken = false;
     uint8_t addressI2C;
 
-    EEPROM(uint8_t address, int clock = 10000)
+    EEPROM(uint8_t address, int clock)
     {
         addressI2C = address;
         begin(address, clock);
     }
 
     //Инициализация EEPROM
-    bool begin(uint8_t address, int clock = 10000)
+    bool begin(uint8_t address, int clock)
     {
         addressI2C = address;
 
@@ -86,3 +80,17 @@ public:
         checkTryAgain - проверка и повторная попытка в случае неудачи 
     */
 };
+
+void setup()
+{
+    Serial.begin(115200);
+    while (!Serial){};
+    Serial.println("Hi");
+    EEPROM memory(EEPROM_ADDRESS, 10000);
+    if (memory.status == true) Serial.println("Find EEPROM");
+}
+
+void loop()
+{
+
+}
