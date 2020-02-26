@@ -1,5 +1,7 @@
 Code/.vscode
 Code/before
 Code/example
-Test Code/.pio
-Test Code/.vscode
+Test Code/STM32/.pio
+Test Code/STM32/.vscode
+Test Code/STM32/.gitignore
+Test Code/AVR
