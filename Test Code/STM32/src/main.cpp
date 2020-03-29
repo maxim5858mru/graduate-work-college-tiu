@@ -2,7 +2,7 @@
 #include "Wire.h"
 
 #define EEPROM_ADDRESS 0b1010000
-#define ERROR_READ 0xFF
+#define ERROR_CODE 0xFF
 
 bool NeedSerial = true;
 char errorBuffer[70];
@@ -37,7 +37,7 @@ public:
     }
 
     //Запись одного байта (предназначена для других функций)
-    int writebyte(int memoryAddress, byte data, bool checkTryAgain) ///
+    int writebyte(int memoryAddress, byte data, bool checkTryAgain)
     {
         int code;
 
@@ -54,69 +54,14 @@ public:
             if (code == 0)                              //Если передача успешная - проверка на битый байт
             {
                 i = 3;
-                if (data != readbyte(memoryAddress, false, false)) {broken = true; return -1;}
+                if (data != readbyte(memoryAddress, false, false, "writebyte")) {broken = true; return -1;}
             }
         }
-        return code;
-    }
-
-    int updatebyte(int memoryAddress, byte data, bool checkTryAgain, bool showError)    ///Связан с updateByte и updateString
-    {
-        int code;
-        byte dataNow = readbyte(memoryAddress, false, showError);
-        
-        if (dataNow != data)
-        {
-            for (int i = checkTryAgain?1:3; i <= 3; i++)
-            {
-                code = writebyte(memoryAddress, data, checkTryAgain);
-                if (code == 0) {i = 3;}
-                else 
-                {
-                    sprintf(errorBuffer, "Error (%d of 3) writing data at address 0x%x for updatebyte: 0d%d", i, memoryAddress, code);
-                    Serial.println(errorBuffer);
-                }
-            }
-            return code;
-        }
-        else {return 0;}
-    }
-
-    int updatebit(int memoryAddress, bool value, int numberBit, bool checkTryAgain, bool showError)
-    {
-        byte data;
-        byte dataNow = readbyte(memoryAddress, checkTryAgain, showError);
-
-        if (value) {data = dataNow | (0b1<<numberBit);}
-        else {data = ~(~dataNow | (0b1<<numberBit));}
-
-        updatebyte(memoryAddress, data, checkTryAgain, showError);
-    }
-
-    int updateString(int memoryAddress, String data, bool endString, bool checkTryAgain, bool showError)
-    {
-        //Код ошибки, возвращается код последней неудачной передачи
-        int code = 0;
-
-        //Запись данных
-        for (int i = 0; i < data.length(); i++)
-        {
-            byte dataNow = readbyte(i + memoryAddress, checkTryAgain, showError);
-
-            if (dataNow != data[i]) 
-            {
-                int codeNow = updatebyte(i + memoryAddress, data[i], checkTryAgain, showError);
-                if (codeNow != 0) {code = codeNow;}
-            }
-        }
-        //Запись символа окончания строки
-        if (endString && 0x00 != readbyte(memoryAddress, checkTryAgain, showError)) updatebyte(memoryAddress + data.length(), 0x00, checkTryAgain, showError);
-
         return code;
     }
 
     //Считывание байта
-    byte readbyte(int memoryAddress, bool checkTryAgain, bool showError)    ///
+    byte readbyte(int memoryAddress, bool checkTryAgain, bool showError, char* called)
     {
         byte data;
         int code;
@@ -135,12 +80,13 @@ public:
                 //Обработка кода ошибки
                 if (code != 0 && showError)          //Вывод ошибки... если нужно
                 {
-                    sprintf(errorBuffer, "Error (%d,%d of 3) sending address 0x%x for readbyte: 0d%d", i, y, memoryAddress, code);
+                    if (called != "") {sprintf(errorBuffer, "Error (%d,%d of 3) sending address 0x%x for readbyte, called by %s: 0d%d", i, y, memoryAddress, called, code);}
+                    else {sprintf(errorBuffer, "Error (%d,%d of 3) sending address 0x%x for readbyte: 0d%d", i, y, memoryAddress, code);}
                     Serial.println(errorBuffer);
                 }
 
                 if (code == 0) {y = 3;}             //Досрочный выход из цикла попыток отправки адреса
-                else if (code != 0 && y == 3) {return ERROR_READ;}//Если количество попыток исчерпано, то бесмыслено продолжать
+                else if (code != 0 && y == 3) {return ERROR_CODE;}//Если количество попыток исчерпано, то бесмыслено продолжать
             }
 
             //Начало передачи для получения данных
@@ -152,21 +98,25 @@ public:
             //Обработка кода ошибки
             if (code != 0 && showError)
             {
-                sprintf(errorBuffer, "Error (%d of 3) receiving data at address 0x%x for readbyte: 0d%d", i, memoryAddress, code);
+                if (called != "") {sprintf(errorBuffer, "Error (%d of 3) receiving data at address 0x%x for readbyte, called by %s: 0d%d", i, memoryAddress, called, code);}
+                else {sprintf(errorBuffer, "Error (%d of 3) receiving data at address 0x%x for readbyte: 0d%d", i, memoryAddress, code);}
                 Serial.println(errorBuffer);
             }
 
             if (code == 0) {return data;}
-            else if (code != 0 && i == 3) {return ERROR_READ;}
         }
+
+        return ERROR_CODE;
     }
 
+    //Считыване бита
     bool readbit(int bitNumber, int memoryAddress, bool checkTryAgain, bool showError)
     {
-        byte data = readbyte(memoryAddress, checkTryAgain, showError);
+        byte data = readbyte(memoryAddress, checkTryAgain, showError, "readbit");
         return data & (0b1<<bitNumber);
     }
 
+    //Считывние строки
     String readString(int length, int memoryAddress, bool checkTryAgain, bool showError)
     {
         int code;
@@ -184,7 +134,7 @@ public:
 
                 if (code != 0 && showError)
                 {
-                    sprintf(errorBuffer, "Error (%d,%d of 3) sending address 0x%x for readString %d: 0d%d", i, y, memoryAddress, length, code);
+                    sprintf(errorBuffer, "Error (%d,%d of 3) sending address 0x%x for readString(%d): 0d%d", i, y, memoryAddress, length, code);
                     Serial.println(errorBuffer);
                 }
 
@@ -206,15 +156,106 @@ public:
             //Обработка кода ошибки
             if (code != 0 && showError)
             {
-                sprintf(errorBuffer, "Error (%d of 3) receiving data at address 0x%x for readString %d: 0d%d", i, memoryAddress, length, code);
+                sprintf(errorBuffer, "Error (%d of 3) receiving data at address 0x%x for readString(%d): 0d%d", i, memoryAddress, length, code);
                 Serial.println(errorBuffer);
             }
-
+ 
             if (code == 0) {return data;}
             else if (code != 0 && i == 3) {return "";}
         }
     }
 
+    //Запись байта, с предварительным считыванием
+    int updatebyte(int memoryAddress, byte data, bool checkTryAgain, bool showError)
+    {
+        int code;
+        byte dataNow = readbyte(memoryAddress, checkTryAgain, showError, "updatebyte");
+        
+        if (dataNow != data)
+        {
+            for (int i = checkTryAgain?1:3; i <= 3; i++)
+            {
+                code = writebyte(memoryAddress, data, false);
+                if (code == 0 || code == -1) {i = 3;}
+                else 
+                {
+                    sprintf(errorBuffer, "Error (%d of 3) writing data at address 0x%x for updatebyte(0x%x): 0d%d", i, memoryAddress, data, code);
+                    Serial.println(errorBuffer);
+                }
+            }
+            return code;
+        }
+        else {return 0;}
+    }
+
+    //Запись бита
+    int updatebit(int memoryAddress, bool value, int numberBit, bool checkTryAgain, bool showError)
+    {
+        int code;
+        byte data;
+        byte dataNow = readbyte(memoryAddress, checkTryAgain, showError, "updatebit");
+
+        //Измененее байта
+        if (value) {data = dataNow | (0b1<<numberBit);}
+        else {data = ~(~dataNow | (0b1<<numberBit));}
+
+        //Запись
+        for (int i = checkTryAgain?1:3; i <= 3; i++)
+        {
+            code = writebyte(memoryAddress, data, false);
+            if (code == 0 || code == -1) {i = 3;}
+            if (code !=0  && showError)
+            {
+                sprintf(errorBuffer, "Error (%d of 3) writing data at address 0x%x for updatebit(0x%x, %d): 0d%d", i, memoryAddress, data, numberBit, code);
+                Serial.println(errorBuffer);
+            }
+        }
+        
+        return code;
+    }
+
+    //Запись строки
+    int updateString(int memoryAddress, String data, bool endString, bool checkTryAgain, bool showError)
+    {
+        //Код ошибки, возвращается код последней неудачной передачи
+        int code = 0;
+
+        //Запись данных
+        for (int i = 0; i < data.length(); i++)
+        {
+            byte dataNow = readbyte(i + memoryAddress, checkTryAgain, showError, "updateString");//Считыванее текущего сммвола
+            if (dataNow != data[i]) 
+            {
+                for (int y = 0; y <= (checkTryAgain?1:3); y++)
+                {
+                    code = writebyte(i + memoryAddress, data[i], false);
+                    if (code == 0) {y = 3;}                 //Выход из цикла повторных попыток
+                    else if (showError)
+                    {
+                        sprintf(errorBuffer, "Error (%d of 3) writing data at address 0x%x for updateString(0x%x, %d): 0d%d", y, memoryAddress, data[i], i, code);
+                        Serial.println(errorBuffer);
+                        return code;
+                    }
+                }
+            }
+        }
+
+        //Запись символа окончания строки
+        if (endString && 0x00 != readbyte(memoryAddress + data.length(), checkTryAgain, showError, "updateString")) for (int y = 1; y <= (checkTryAgain?1:3); y++)
+        {
+            code = writebyte(memoryAddress + data.length(), 0x00, checkTryAgain);
+            if (code == 0) {return code;}
+            else if (showError)
+            {
+                sprintf(errorBuffer, "Error (%d of 3) writing endchar at address 0x%x for updatebit(0x00): 0d%d", y, memoryAddress + data.length(), code);
+                Serial.println(errorBuffer);
+            }
+        }
+
+        return code;
+    }
+
+    //Вывод карты памяти
     void printmap(int start, int size, int sizeLine, bool printText, bool checkTryAgain)
     {
         if (Serial)
@@ -227,7 +268,7 @@ public:
                 Serial.print(String(i) + ": ");
                 for (int y = 0; y < sizeLine; y++)
                 {
-                    data = readbyte(i, checkTryAgain, false);
+                    data = readbyte(i, checkTryAgain, false, "printmap");
                     if (printText) 
                     {
                         switch (data)                       //Обработка спецсимволов
@@ -340,6 +381,8 @@ public:
         } 
     }
 
+private:
+
     //Значения переменных используемых в функциях
     /*  
         clock - частота шины I2C [10k, 100k, 1M]
@@ -349,7 +392,7 @@ public:
         code - код результата передачи данных [-1 - битый байт; 0 - норма; остальное неудача]
         checkTryAgain - проверка и повторная попытка в случае неудачи 
         showError - вывод ошибки
-        causedBy - информация о функции которая вызвала функцию, нужно для вывода ошибки.
+        called - информация о функции которая вызвала функцию, нужно для вывода ошибки.
     */
 };
 
@@ -360,9 +403,18 @@ void setup()
     if (memory.status == true) {Serial.println("Find EEPROM");}
     else {Serial.println("ERROR");}
 
-    // memory.printmap(0, 50, 10, true, true);
-    memory.writebyte(1, 0xAB, true);
-    Serial.println(memory.readbyte(1, true, true));
+    for (int i = 30; i >= 0; i--){memory.updatebyte(i, 0xFF, true, false);}
+    
+
+    memory.updateString(0, "Hi", true, true, true);
+    memory.printmap(0, 30, 10, true, true);
+
+    Serial.println(memory.readString(10, 0, true, true));
+    memory.updateString(0, "Hello world", false, true, true);
+    memory.printmap(0, 30, 10, true, true);
+    memory.updateString(0, "Привет", true, true, true);
+    Serial.println(memory.readString(30, 0, true, true));
+    memory.printmap(0, 30, 10, true, true);
 }
 
 void loop()
