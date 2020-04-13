@@ -4,4 +4,7 @@ Code/example
 Test Code/STM32/.pio
 Test Code/STM32/.vscode
 Test Code/STM32/.gitignore
+Test Code/ESP32/.pio
+Test Code/ESP32/.vscode
+Test Code/ESP32/.gitignore
 Test Code/AVR
