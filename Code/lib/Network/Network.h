@@ -5,8 +5,6 @@
 #include <WiFi.h>
 #include <esp_wps.h>
 
-
-
 namespace Network
 {
   static String ssid;

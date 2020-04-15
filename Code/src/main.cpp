@@ -2,10 +2,11 @@
 #include <SPIFFS.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
-#include <ArduinoOTA.h>
+// #include <ArduinoOTA.h>
 #include "../lib/IIC/IIC.h"
 #include "../lib/Timer/Timer.h"
 #include "../lib/Network/Network.h"
+#include "../lib/Routing/Routing.h"
 
 //Адрес памяти в шине IIC
 #define EEPROM_ADDRESS 0b1010000
@@ -40,17 +41,9 @@ bool flags[2] = {
 
 String host;
 
-void handleNotFound(AsyncWebServerRequest *request);
-
 EEPROM memory(EEPROM_ADDRESS, 10000);
 Timer timer;
 AsyncWebServer server(80);
-
-//Маршрутизация
-void handleNotFound(AsyncWebServerRequest *request)
-{
-  request->send(SPIFFS, "/NotFound.html", "text/html");
-}
 
 void setup()
 {
@@ -69,53 +62,57 @@ void setup()
   if (memory.status) {Network::setupWiFi();}
   else {Network::presetupWiFi();}                            //Создание точки доступа с предустановленными значениями
 
-  // //Настройка Web сервера
-  // if (SPIFFSWorking) 
-  // {
+  //Настройка Web сервера
+  if (SPIFFSWorking && WiFi.status() == WL_CONNECTED) 
+  {
+    if (memory.status)                //Включение MDNS
+    {
+      host = memory.readString(EEPROM_SIZE_MDNS, EEPROM_ADDRESS_MDNS);
+      if (!host.isEmpty() && MDNS.begin(host.c_str())) 
+      {
+        if (NeedSerial) {Serial.println("MDNS включён, локальный адресс: http://" + String(host) + ".local/");}
+        MDSNWorking = true;
+      }
+    }
 
-  //   if (memory.status && WiFi.status() == WL_CONNECTED) 
-  //   {
-  //     host = memory.readString(EEPROM_SIZE_MDNS, EEPROM_ADDRESS_MDNS);
-  //     if (MDNS.begin(host.c_str())) 
-  //     {
-  //       if (NeedSerial) Serial.println("MDNS включён, локальный адресс: http://" + String(host) + ".local/");
-  //       MDSNWorking = true;
-  //     }
-  //   }
-  //   server.on("/", HTTP_GET, handleNotFound);                                   //Настройка маршрутизации сервера
-  //   server.onNotFound(handleNotFound);
+    //Настройка маршрутизации сервера
 
-    // server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-    //   request->send(SPIFFS, "/style.css", "text/css");
-  //   });
-  //   server.on("/font-awsome all.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-  //     request->send(SPIFFS, "/font-awsome all.css", "text/css");
-  //   });
-  //   server.on("/fa-solid-900.svg", HTTP_GET, [](AsyncWebServerRequest *request) {
-  //     request->send(SPIFFS, "/fa-solid-900.svg", "image/svg+xml");
-  //   });
-  //   server.on("/fa-solid-900.woff2", HTTP_GET, [](AsyncWebServerRequest *request) {
-  //     request->send(SPIFFS, "/fa-solid-900.woff2", "font/woff2");
-  //   });
-  //   server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-  //     request->send(SPIFFS, "/script.js", "text/javascript");
-  //   });
+    //HTML
+    server.onNotFound(handleNotFound);
+    server.on("/", HTTP_GET, handleNotFound);                 
 
-  //   server.begin();
-  //     if (MDSNWorking) {MDNS.addService("http", "tcp", 80);}
-  //   }
-  // }
+    //JS & CSS
+    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
+      request->send(SPIFFS, "/style.css", "text/css");
+    });
+    server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+      request->send(SPIFFS, "/script.js", "text/javascript");
+    });
 
-  // //Обновление по сети
-  // ArduinoOTA.onStart([]                                                           
-  // {
-  //   String type;
-  //   if (ArduinoOTA.getCommand() == U_FLASH) {type = "sketch";}
-  //   else {type = "filesystem";}
-  //   if (SPIFFSWorking) {SPIFFS.end();}
-  //   /////////Дверь закрыть
-  // });
-  // ArduinoOTA.begin();
+    //Используемые плагины
+    server.on("/FontAwsome/font-awsome all.css", HTTP_GET, [](AsyncWebServerRequest *request) {
+      request->send(SPIFFS, "/FontAwsome/font-awsome all.css", "text/css");
+    });
+    server.on("/FontAwsome/fa-solid-900.woff2", HTTP_GET, [](AsyncWebServerRequest *request) {
+      request->send(SPIFFS, "/FontAwsome/fa-solid-900.woff2", "font/woff");
+    });
+    server.on("/FontAwsome/fa-solid-900.svg", HTTP_GET, [](AsyncWebServerRequest *request) {
+      request->send(SPIFFS, "/FontAwsome/fa-solid-900.svg", "image/svg+xml");
+    });
+
+    server.begin();
+    if (MDSNWorking) {MDNS.addService("http", "tcp", 80);}
+
+    /*Обновление по сети
+    ArduinoOTA.onStart([]                                                           
+    {
+      String type;
+      if (ArduinoOTA.getCommand() == U_FLASH) {type = "sketch";}
+      else {type = "filesystem";}
+      if (SPIFFSWorking) {SPIFFS.end();}
+    });
+    ArduinoOTA.begin();*/
+  }
 }
 
 void loop()

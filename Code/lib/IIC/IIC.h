@@ -21,8 +21,8 @@
 class EEPROM
 {
 private:
-    char errorBuffer[70];
     uint8_t addressI2C;
+    // bool wasERROR = false; //Нужно подключить флаг ошибки, чтобы при работе с сервером не было проблем с выявлением ошибки
 
 public:
     bool status = false;                            //Статус инициализации
@@ -31,7 +31,7 @@ public:
     EEPROM(uint8_t address, int clock = 10000);
     bool begin(uint8_t address, int clock = 10000);
     int writebyte(int memoryAddress, byte data, bool checkTryAgain = true);
-    byte readbyte(int memoryAddress, bool checkTryAgain, bool showError, char* called = "");
+    byte readbyte(int memoryAddress, bool checkTryAgain, bool showError, const char* called = NULL);
     bool readbit(int bitNumber, int memoryAddress, bool checkTryAgain = true, bool showError = false);
     String readString(int length, int memoryAddress, bool checkTryAgain = true, bool showError = false);
     int updatebyte(int memoryAddress, byte data, bool checkTryAgain = true, bool showError = false);

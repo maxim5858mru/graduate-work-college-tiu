@@ -71,7 +71,7 @@ int EEPROM::writebyte(int memoryAddress, byte data, bool checkTryAgain)
 }
 
 //Считывание байта
-byte EEPROM::readbyte(int memoryAddress, bool checkTryAgain, bool showError, char* called)
+byte EEPROM::readbyte(int memoryAddress, bool checkTryAgain, bool showError, const char* called)
 {
   byte data;
   int code;
@@ -90,9 +90,8 @@ byte EEPROM::readbyte(int memoryAddress, bool checkTryAgain, bool showError, cha
       //Обработка кода ошибки
       if (code != 0 && showError)          //Вывод ошибки... если нужно
       {
-        if (called != "") {sprintf(errorBuffer, "Error (%d,%d of 3) sending address 0x%x for readbyte, called by %s: 0d%d", i, y, memoryAddress, called, code);}
-        else {sprintf(errorBuffer, "Error (%d,%d of 3) sending address 0x%x for readbyte: 0d%d", i, y, memoryAddress, code);}
-        Serial.println(errorBuffer);
+        if (called) {Serial.printf("Error (%d,%d of 3) sending address 0x%x for readbyte, called by %s: 0d%d", i, y, memoryAddress, called, code);}
+        else {Serial.printf("Error (%d,%d of 3) sending address 0x%x for readbyte: 0d%d", i, y, memoryAddress, code);}
       }
 
       if (code == 0) {y = 3;}             //Досрочный выход из цикла попыток отправки адреса
@@ -108,9 +107,8 @@ byte EEPROM::readbyte(int memoryAddress, bool checkTryAgain, bool showError, cha
     //Обработка кода ошибки
     if (code != 0 && showError)
     {
-      if (called != "") {sprintf(errorBuffer, "Error (%d of 3) receiving data at address 0x%x for readbyte, called by %s: 0d%d", i, memoryAddress, called, code);}
-      else {sprintf(errorBuffer, "Error (%d of 3) receiving data at address 0x%x for readbyte: 0d%d", i, memoryAddress, code);}
-      Serial.println(errorBuffer);
+      if (called) {Serial.printf("Error (%d of 3) receiving data at address 0x%x for readbyte, called by %s: 0d%d", i, memoryAddress, called, code);}
+      else {Serial.printf("Error (%d of 3) receiving data at address 0x%x for readbyte: 0d%d", i, memoryAddress, code);}
     }
 
     if (code == 0) {return data;}
@@ -144,8 +142,7 @@ String EEPROM::readString(int length, int memoryAddress, bool checkTryAgain, boo
 
       if (code != 0 && showError)
       {
-        sprintf(errorBuffer, "Error (%d,%d of 3) sending address 0x%x for readString(%d): 0d%d", i, y, memoryAddress, length, code);
-        Serial.println(errorBuffer);
+        Serial.printf("Error (%d,%d of 3) sending address 0x%x for readString(%d): 0d%d", i, y, memoryAddress, length, code);
       }
 
       if (code == 0) {y = 3;}
@@ -166,8 +163,7 @@ String EEPROM::readString(int length, int memoryAddress, bool checkTryAgain, boo
     //Обработка кода ошибки
     if (code != 0 && showError)
     {
-      sprintf(errorBuffer, "Error (%d of 3) receiving data at address 0x%x for readString(%d): 0d%d", i, memoryAddress, length, code);
-      Serial.println(errorBuffer);
+      Serial.printf("Error (%d of 3) receiving data at address 0x%x for readString(%d): 0d%d", i, memoryAddress, length, code);
     }
  
     if (code == 0) {return data;}
@@ -189,8 +185,7 @@ int EEPROM::updatebyte(int memoryAddress, byte data, bool checkTryAgain, bool sh
       if (code == 0 || code == -1) {i = 3;}
       else 
       {
-        sprintf(errorBuffer, "Error (%d of 3) writing data at address 0x%x for updatebyte(0x%x): 0d%d", i, memoryAddress, data, code);
-        Serial.println(errorBuffer);
+        Serial.printf("Error (%d of 3) writing data at address 0x%x for updatebyte(0x%x): 0d%d", i, memoryAddress, data, code);
       }
     }
     return code;
@@ -216,8 +211,7 @@ int EEPROM::updatebit(int memoryAddress, bool value, int numberBit, bool checkTr
     if (code == 0 || code == -1) {i = 3;}
     if (code !=0  && showError)
     {
-      sprintf(errorBuffer, "Error (%d of 3) writing data at address 0x%x for updatebit(0x%x, %d): 0d%d", i, memoryAddress, data, numberBit, code);
-      Serial.println(errorBuffer);
+      Serial.printf("Error (%d of 3) writing data at address 0x%x for updatebit(0x%x, %d): 0d%d", i, memoryAddress, data, numberBit, code);
     }
   }
         
@@ -242,8 +236,7 @@ int EEPROM::updateString(int memoryAddress, String data, bool endString, bool ch
         if (code == 0) {y = 3;}                 //Выход из цикла повторных попыток
         else if (showError)
         {
-          sprintf(errorBuffer, "Error (%d of 3) writing data at address 0x%x for updateString(0x%x, %d): 0d%d", y, memoryAddress, data[i], i, code);
-          Serial.println(errorBuffer);
+          Serial.printf("Error (%d of 3) writing data at address 0x%x for updateString(0x%x, %d): 0d%d", y, memoryAddress, data[i], i, code);
           return code;
         }
       }
@@ -257,8 +250,7 @@ int EEPROM::updateString(int memoryAddress, String data, bool endString, bool ch
     if (code == 0) {return code;}
     else if (showError)
     {
-      sprintf(errorBuffer, "Error (%d of 3) writing endchar at address 0x%x for updatebit(0x00): 0d%d", y, memoryAddress + data.length(), code);
-      Serial.println(errorBuffer);
+      Serial.printf("Error (%d of 3) writing endchar at address 0x%x for updatebit(0x00): 0d%d", y, memoryAddress + data.length(), code);
     }
   }
 

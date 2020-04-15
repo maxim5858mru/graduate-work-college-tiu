@@ -1,10 +1,12 @@
 Code/.vscode
-Code/before
-Code/example
+Code/.gitignore
+Code/.pio
 Test Code/STM32/.pio
 Test Code/STM32/.vscode
 Test Code/STM32/.gitignore
 Test Code/ESP32/.pio
 Test Code/ESP32/.vscode
 Test Code/ESP32/.gitignore
-Test Code/AVR
+Test Code/AVR/.vscode
+Test Code/AVR/.pio
+Test Code/AVR/.gitignore

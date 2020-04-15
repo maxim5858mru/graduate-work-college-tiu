@@ -32,7 +32,7 @@ extern Timer timer;
 //Обработчик прерываний Wi-Fi
 void Network::interrupt(WiFiEvent_t event, system_event_info_t info)
 {
-  switch (event)
+  if (Serial) switch (event)
   {
     case SYSTEM_EVENT_STA_START:
       break;
@@ -41,9 +41,10 @@ void Network::interrupt(WiFiEvent_t event, system_event_info_t info)
       Serial.print("Got IP: ");
       Serial.println(WiFi.localIP());
       break;
-    case SYSTEM_EVENT_STA_DISCONNECTED:
-      WiFi.reconnect();
-      break;
+    // case SYSTEM_EVENT_STA_DISCONNECTED:
+    //   WiFi.reconnect();
+    //   /**/Serial.println("HHH");
+    //   break;
     case SYSTEM_EVENT_STA_WPS_ER_SUCCESS:
       Serial.println("The device connected to " + String(WiFi.SSID()) + " using WPS.");
       esp_wifi_wps_disable();
@@ -97,7 +98,6 @@ void Network::interrupt(WiFiEvent_t event, system_event_info_t info)
 //Включение WPS
 void Network::startWPS()
 {
-
   WiFi.mode(WIFI_MODE_STA);
 
   config.crypto_funcs = &g_wifi_default_wps_crypto_funcs;
@@ -111,12 +111,14 @@ void Network::startWPS()
   esp_wifi_wps_enable(&config);
   esp_wifi_wps_start(0);
 
+  Serial.println("WPS working.");
 }
 
 //Выбор Wi-Fi сети
 bool Network::selectWiFi()
 {
-  WiFi.disconnect();                      //Перед поиском нужно отключить WiFi контроллер от "сети" (которой нет)              
+  WiFi.disconnect();                     //Перед поиском нужно отключить WiFi контроллер от "сети" (которой нет) 
+  delay(100);
   int numberOfNetworks = WiFi.scanNetworks();
 
   if (numberOfNetworks == 0) 
@@ -166,12 +168,12 @@ bool Network::selectWiFi()
     if (!timer.timerCheckAndStop()) return false;
     String temp = Serial.readString();
 
-    if (temp = "-1")              //WPS
+    if (temp == "-1")              //WPS
     {
       WiFiAP = false;
       startWPS();
     }
-    else if (temp = "0")          //AP
+    else if (temp == "0")          //AP
     {
       WiFiAP = true;
       Serial.println("Enter the SSID of the new access point: ");
@@ -184,12 +186,47 @@ bool Network::selectWiFi()
 
       return true;
     }
-    else                         //По имени сети
+    else if ([](String string) -> bool //По номеру из списка
     {
-      /**/return false;
+      for (int i = 0; i < string.length(); i++) 
+      {
+        if ((0x30 <= string[i] && string[i] <= 0x39) || string[i] == 0x0A || string[i] == 0x0D || string[i] == 0x20) {}
+        else {return false;}
+      }
+      return true;
+    } (temp) && temp.toInt() <= numberOfNetworks) 
+    {
+      int numberSSID = temp.toInt() - 1;
+      ssid = networksSSID[numberSSID];
+      Serial.println("You have selected a network with an SSID '" + ssid + "'.");
+
+      if (networksENCRYPT[numberSSID]) 
+      {
+        Serial.println("Enter the password: ");
+        while (!Serial.available()) {}
+        password = Serial.readString();
+      }
+      else {password = "";}
+
+      return true;
+    }
+    else                           //По имени сети
+    {
+      ssid = temp;
+      Serial.println("You entered the SSID '" + ssid + "'.");
+      
+      Serial.println("Enter the password: ");
+      while (!Serial.available()) {}
+      password = Serial.readString();
+
+      if (password.isEmpty() || password == "-" || password[0] == 0x0A || password[0] == 0x0D) 
+      {password = "";}
+
+      return true;
     }
   }
 
+  return false;
 }
 
 //Создание точки доступа с предустановленными значениями 
@@ -218,6 +255,7 @@ void Network::setupWiFi()
   //Сброс Wi-Fi модуля
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
+  WiFi.softAPdisconnect();             
   delay(100);
 
   //Получение SSID и пароля из памяти
@@ -227,7 +265,9 @@ void Network::setupWiFi()
     if (!ssid.isEmpty())                            //Если пусто, то ждём проверки на соединение (результат которой будет ложный)
     {
       password = memory.readString(64, EEPROM_ADDRESS_AP + 32);
-      WiFi.softAP(ssid.c_str(), password.c_str());  //Создание точки доступа
+      if (password.isEmpty()) {WiFi.softAP(ssid.c_str(), NULL);} //Создание точки доступа
+      else {WiFi.softAP(ssid.c_str(), password.c_str());}
+
       if (Serial)                      //Для отладки
       {
         Serial.println("Attempt to create a network with ssid '" + ssid + "'.");
@@ -241,13 +281,15 @@ void Network::setupWiFi()
   else for (int i = 0; i < 3; i++)                  //Перебор сохранённых значений
   {
     ssid = memory.readString(32, EEPROM_ADDRESS_WiFi + (96) * i);
+    /**/Serial.println("WiFi "+ssid);
     if (ssid.isEmpty()) {continue;}
     password = memory.readString(64, EEPROM_ADDRESS_WiFi + 32 + (96) * i);
     WiFi.begin(ssid.c_str(), password.c_str());     //Попытка подключения
     if (Serial) {Serial.println("Attempt to connect to " + ssid + " network.");}
-    delay(2000);
+    delay(3000);
     if (WiFi.status() == WL_CONNECTED) {return;}
   }
+
   while (1)                                         //Программа выйдит из цикла если подкл.чится к сети, или если пользователь откажется
   {
     if (WiFi.status() == WL_CONNECTED) {return;}
@@ -255,7 +297,13 @@ void Network::setupWiFi()
     {
       if (WiFiAP) 
       {
-        WiFi.softAP(ssid.c_str(), password.c_str());        
+        if (password.isEmpty() || password == "-" || password[0] == 0x0A || password[0] == 0x0D) 
+        {
+          WiFi.softAP(ssid.c_str(), NULL);        //Вместо пароля нужно передать NULL, чтобы точка доступа была открытая.
+          password = "";
+        }  
+        else {WiFi.softAP(ssid.c_str(), password.c_str());}
+
         if (Serial) 
         {
           Serial.println("Attempt to create a network with ssid '" + ssid + "'.");
@@ -286,6 +334,7 @@ void Network::setupWiFi()
       {
         WiFi.begin(ssid.c_str(), password.c_str());
         Serial.println("Attempt to connect to " + ssid + " network.");
+        delay(4000);
 
         if (WiFi.status() == WL_CONNECTED)
         {
@@ -299,8 +348,8 @@ void Network::setupWiFi()
             if ((i == "1") || (i == "2") || (i = "3"))
 
             memory.updatebit(0, false, 2);
-            memory.updateString(EEPROM_ADDRESS_WiFi + 96 * i.toInt(), ssid);
-            memory.updateString(EEPROM_ADDRESS_WiFi + 32 + 96 * i.toInt(), password);
+            memory.updateString(EEPROM_ADDRESS_WiFi + 96 * (i.toInt() - 1), ssid);
+            memory.updateString(EEPROM_ADDRESS_WiFi + 32 + 96 * (i.toInt() - 1), password);
 
             break;
           }
