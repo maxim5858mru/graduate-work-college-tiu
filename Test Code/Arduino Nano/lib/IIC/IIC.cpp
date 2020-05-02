@@ -51,7 +51,7 @@ int EEPROM::writebyte(int memoryAddress, byte data, bool checkTryAgain)
     Wire.write((memoryAddress) >> 8);             // Отправка адреса
     Wire.write((memoryAddress) & 0xFF);
     Wire.write(data);                             // Отправка данных
-    code = Wire.endTransmission();                // Окончание передачи и получения кода передачи
+    code = Wire.endTransmission();                // Окончание передачи и получени кода передачи
     delay(7);                                     // Время на запись данных
             
     // Обработка кода ошибки
@@ -95,7 +95,7 @@ byte EEPROM::readbyte(int memoryAddress, bool checkTryAgain, bool showError, con
       }
 
       if (code == 0) {y = 3;}                     // Досрочный выход из цикла попыток отправки адреса
-      else if (code != 0 && y == 3) {return ERROR_CODE;}                   // Если количество попыток исчерпано, то бессмысленно продолжать
+      else if (code != 0 && y == 3) {return ERROR_CODE;}                   // Если количество попыток исчерпано, то бесмыслено продолжать
     }
 
     // Начало передачи для получения данных
@@ -117,7 +117,7 @@ byte EEPROM::readbyte(int memoryAddress, bool checkTryAgain, bool showError, con
   return ERROR_CODE;
 }
 
-/** Считывание бита. Функция (почти) является обвёрткой для readbyte
+/** Считыване бита. Функция (почти) является обвёрткой для readbyte
  * @param bitNumber - номер считываемого бита
  * @param memoryAddress - двухбайтовый адрес для чтения данных
  * @param checkTryAgain - повторная попытка (x3) в случае неудачи
@@ -136,7 +136,7 @@ bool EEPROM::readbit(int bitNumber, int memoryAddress, bool checkTryAgain, bool 
  * @param memoryAddress - двухбайтовый адрес начала строки, для её чтения
  * @param checkTryAgain - повторная попытка чтения (x3) в случае неудачи
  * @param showError - вывод ошибки
- * @return возвращает строку (к сожалению не удалось перейти на массив символов, из-за библиотеки Wire)
+ * @return возвращает строку (к сожелению не удалось перейти на массив символов, из-за библиотеки Wire)
  */
 String EEPROM::readString(int length, int memoryAddress, bool checkTryAgain, bool showError)
 {
@@ -226,7 +226,7 @@ int EEPROM::updatebit(int memoryAddress, bool value, int bitNumber, bool checkTr
   byte data;
   byte dataNow = readbyte(memoryAddress, checkTryAgain, showError, "updatebit");
 
-  // Изменение байта
+  // Измененее байта
   if (value) {data = dataNow | (0b1<<bitNumber);}
   else {data = ~(~dataNow | (0b1<<bitNumber));}
 
@@ -260,7 +260,7 @@ int EEPROM::updateString(int memoryAddress, String data, bool endString, bool ch
   // Запись данных
   for (int i = 0; i < data.length(); i++)
   {
-    byte dataNow = readbyte(i + memoryAddress, checkTryAgain, showError, "updateString");           // Считывание текущего символа
+    byte dataNow = readbyte(i + memoryAddress, checkTryAgain, showError, "updateString");           // Считыванее текущего сммвола
     if (dataNow != data[i]) 
     {
       for (int y = 0; y <= (checkTryAgain?1:3); y++)
@@ -443,7 +443,7 @@ byte Keypad::_changeAndGetBack(byte data)
   return _newPORT;
 }
 
-Keypad::Keypad(uint8_t address, uint8_t type, uint32_t timeHold)
+Keypad::Keypad(uint8_t address, uint8_t type, uint32_t timeHold = 2000)
 {
   // Сохранение (копирование) значений параметров клавиатуры
 

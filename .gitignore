@@ -10,3 +10,6 @@ Test Code/ESP32/.gitignore
 Test Code/AVR/.vscode
 Test Code/AVR/.pio
 Test Code/AVR/.gitignore
+Test Code/Arduino Nano/.vscode
+Test Code/Arduino Nano/.pio
+Test Code/Arduino Nano/.gitignore

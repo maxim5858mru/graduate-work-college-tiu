@@ -2,6 +2,8 @@
 #include <SPIFFS.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
+#include <LiquidCrystal_I2C.h>
+#include <AmperkaKB.h>
 // #include <ArduinoOTA.h>
 #include "../lib/IIC/IIC.h"
 #include "../lib/Timer/Timer.h"
@@ -44,10 +46,18 @@ String host;
 EEPROM memory(EEPROM_ADDRESS, 10000);
 Timer timer;
 AsyncWebServer server(80);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+AmperkaKB keypad(13, 12, 27, 26, 33, 32, 15, 2);
+// AmperkaKB keypad(23, 25, 26, 27, 32, 33, 34, 35);
+
+long getDistance(uint8_t trig, uint8_t echo);
+void showPassword(String password);
 
 void setup()
 {
   memory.begin(EEPROM_ADDRESS);
+  lcd.init();
+  keypad.begin(KB4x4);
 
   //Получение настроек с памяти
   if (memory.status) for (int i = 0; i < 8; i++) {settings[i] = memory.readbit(i, 0);}
@@ -113,9 +123,146 @@ void setup()
     });
     ArduinoOTA.begin();*/
   }
+
+  lcd.backlight();
+  lcd.setCursor(4, 0);
+  lcd.print("Good Day");
 }
 
 void loop()
 {
   // ArduinoOTA.handle();
+  
+  //Проверка растояния 
+  if (getDistance(15, 4) < 60 || timer.timerIsWorking())   //Для экономии подсветки
+  {
+    if (getDistance(15, 4) < 60) 
+    {
+      timer.timerCheckAndStop();
+      timer.timerStart(10);
+    }
+    
+    lcd.backlight();
+
+    // keypad.read();            //Получение значения с клавиатуры
+    // if (keypad.justPressed())
+    // {
+    //   String password = "";        //Переменные лучше не объявлять в switch, иначе break может не сработать
+    //   switch (keypad.getNum)
+    //   {
+    //     //Режим ввода ПИН-кода
+    //     case 0:
+    //     case 1:
+    //     case 2:
+    //     case 3:
+    //     case 4:
+    //     case 5:
+    //     case 6:
+    //     case 7:
+    //     case 8:
+    //     case 9:
+    //       lcd.clear();
+    //       lcd.setCursor(0,0);
+    //       lcd.print("PIN");
+
+    //       //Ввод кода
+    //       lcd.setCursor(0,1);
+    //       password = keypad.getChar;
+    //       showPassword(password);
+
+    //       while (password.length() > 0 || password.length() < 16)         //Режим ввода ПИН-кода будет, пока пользователь не введёт или сбросит пароль
+    //       {
+    //         keypad.read();                                                  //Получение нового значения, прошлое уже записано ранее
+    //         if (keypad.justPressed()) 
+    //         {
+    //           showPassword(password);
+
+    //           switch (keypad.getNum)
+    //           {
+    //             //ПИН-код может состоять только из чисел
+    //             case 0:
+    //             case 1:
+    //             case 2:
+    //             case 3:
+    //             case 4:
+    //             case 5:
+    //             case 6:
+    //             case 7:
+    //             case 8:
+    //             case 9:
+    //               password += keypad.getChar;
+    //               break;
+    //             //Кнопка * - удаляет символ
+    //             case 14:
+    //               password.remove(password.length() - 1);    
+    //               break;
+    //             //Кнопка # - окончание ввода пароля
+    //             case 15:
+    //               ////////////////////////////
+    //               password = "";   
+    //               break;    
+    //             //A B C D - сбрассывают пароль   
+    //             default:
+    //               password = "";
+
+    //               break;
+    //           }
+    //         }
+    //       }
+          
+    //       lcd.clear();
+    //       lcd.setCursor(4, 0);
+    //       lcd.print("Good Day");
+
+    //       break;
+    //     //Вход в меню
+    //     case 10:
+    //     case 11:
+    //     case 12:
+    //     case 13:
+    //       lcd.clear();
+    //       lcd.setCursor(0, 0);
+    //       lcd.print("Menu");
+    //     default:
+    //       break;
+    //   }
+    // }
+  }
+  else {lcd.noBacklight();}
+  /////Нужно добавить прерывние на открытие двери по нажатии кнопки выхода
+}
+
+long getDistance(uint8_t trig, uint8_t echo)
+{
+  long duration, cm;
+
+  pinMode(trig, OUTPUT);
+  pinMode(echo, INPUT);
+
+  digitalWrite(trig, LOW);
+  delayMicroseconds(5);
+  digitalWrite(trig, HIGH);
+
+  // Выставив высокий уровень сигнала, ждем около 10 микросекунд. В этот момент датчик будет посылать сигналы с частотой 40 КГц.
+  delayMicroseconds(10);
+  digitalWrite(trig, LOW);
+
+  //  Время задержки акустического сигнала на эхолокаторе.
+  duration = pulseIn(echo, HIGH);
+
+  // Теперь осталось преобразовать время в расстояние
+  cm = (duration / 2) / 29.1;
+
+  // Задержка между измерениями для корректной работы скеча
+  delay(250);
+  return cm;
+}
+
+
+void showPassword(String password)
+{
+  lcd.setCursor(0,1);
+  lcd.print("                ");
+  lcd.setCursor(0,1);
+  lcd.print(password);
 }
