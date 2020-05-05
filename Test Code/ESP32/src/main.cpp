@@ -394,6 +394,8 @@ void loop()
 }
 */
 
+
+/*
 #include <Wire.h>
  
 void setup(){
@@ -437,4 +439,35 @@ void loop(){
         Serial.println("done\n");
  
     delay(5000);
+}
+*/
+
+#include <SPI.h>
+#include <MFRC522.h>
+
+#define SS_PIN 14
+#define RST_PIN 2
+ 
+MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
+
+void setup() { 
+  Serial.begin(9600);
+  SPI.begin(); // Init SPI bus
+  rfid.PCD_Init(); // Init MFRC522 
+}
+ 
+void loop() {
+
+  if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial())
+  {
+    int temp = 0;
+
+    for (int i = 0; i < 4; i++)
+    {
+        temp |= rfid.uid.uidByte[i] << ((3-i)*8);
+    }
+  }
+
+  rfid.PICC_HaltA();
+  rfid.PCD_StopCrypto1();
 }

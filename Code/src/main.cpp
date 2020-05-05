@@ -3,7 +3,7 @@
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
 #include <LiquidCrystal_I2C.h>
-#include <AmperkaKB.h>
+#include <MFRC522.h>
 // #include <ArduinoOTA.h>
 #include "../lib/IIC/IIC.h"
 #include "../lib/Timer/Timer.h"
@@ -44,20 +44,25 @@ bool flags[2] = {
 String host;
 
 EEPROM memory(EEPROM_ADDRESS, 10000);
+Keypad keypad(0x21, KB4x4);
+MFRC522 rfid(14, 2);
 Timer timer;
 AsyncWebServer server(80);
 LiquidCrystal_I2C lcd(0x27, 16, 2);
-AmperkaKB keypad(13, 12, 27, 26, 33, 32, 15, 2);
-// AmperkaKB keypad(23, 25, 26, 27, 32, 33, 34, 35);
 
 long getDistance(uint8_t trig, uint8_t echo);
-void showPassword(String password);
+void showPassword(String password, bool addOrDel);
+bool checkPassword(String password);
+int getRFID(MFRC522 rfid);
+bool checkRFID(int key);
 
 void setup()
 {
   memory.begin(EEPROM_ADDRESS);
+  SPI.begin();
+  rfid.PCD_Init(); 
   lcd.init();
-  keypad.begin(KB4x4);
+  keypad.begin();
 
   //Получение настроек с памяти
   if (memory.status) for (int i = 0; i < 8; i++) {settings[i] = memory.readbit(i, 0);}
@@ -70,12 +75,12 @@ void setup()
 
   //Настройка Wi-Fi
   if (memory.status) {Network::setupWiFi();}
-  else {Network::presetupWiFi();}                            //Создание точки доступа с предустановленными значениями
+  else {Network::presetupWiFi();}                                          //Создание точки доступа с предустановленными значениями
 
   //Настройка Web сервера
   if (SPIFFSWorking && WiFi.status() == WL_CONNECTED) 
   {
-    if (memory.status)                //Включение MDNS
+    if (memory.status)                            //Включение MDNS
     {
       host = memory.readString(EEPROM_SIZE_MDNS, EEPROM_ADDRESS_MDNS);
       if (!host.isEmpty() && MDNS.begin(host.c_str())) 
@@ -134,7 +139,7 @@ void loop()
   // ArduinoOTA.handle();
   
   //Проверка растояния 
-  if (getDistance(15, 4) < 60 || timer.timerIsWorking())   //Для экономии подсветки
+  if (getDistance(15, 4) < 60 || timer.timerIsWorking())                   // Для экономии подсветки
   {
     if (getDistance(15, 4) < 60) 
     {
@@ -144,89 +149,96 @@ void loop()
     
     lcd.backlight();
 
-    // keypad.read();            //Получение значения с клавиатуры
-    // if (keypad.justPressed())
-    // {
-    //   String password = "";        //Переменные лучше не объявлять в switch, иначе break может не сработать
-    //   switch (keypad.getNum)
-    //   {
-    //     //Режим ввода ПИН-кода
-    //     case 0:
-    //     case 1:
-    //     case 2:
-    //     case 3:
-    //     case 4:
-    //     case 5:
-    //     case 6:
-    //     case 7:
-    //     case 8:
-    //     case 9:
-    //       lcd.clear();
-    //       lcd.setCursor(0,0);
-    //       lcd.print("PIN");
+    keypad.read();                                // Получение значения с клавиатуры
+    if (keypad.state == ON_PRESS)
+    {
+      String password = "";                       // Переменные лучше не объявлять в switch, иначе break может не сработать после 1 условия
+      bool stopReadPass = false;
 
-    //       //Ввод кода
-    //       lcd.setCursor(0,1);
-    //       password = keypad.getChar;
-    //       showPassword(password);
+      switch (keypad.Numb)
+      {
+        //Режим ввода ПИН-кода
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+          lcd.clear();
+          // lcd.setCursor(0,0);
+          lcd.print("PIN");
 
-    //       while (password.length() > 0 || password.length() < 16)         //Режим ввода ПИН-кода будет, пока пользователь не введёт или сбросит пароль
-    //       {
-    //         keypad.read();                                                  //Получение нового значения, прошлое уже записано ранее
-    //         if (keypad.justPressed()) 
-    //         {
-    //           showPassword(password);
+          //Ввод кода
+          password = keypad.Char;
+          showPassword(password, true);
 
-    //           switch (keypad.getNum)
-    //           {
-    //             //ПИН-код может состоять только из чисел
-    //             case 0:
-    //             case 1:
-    //             case 2:
-    //             case 3:
-    //             case 4:
-    //             case 5:
-    //             case 6:
-    //             case 7:
-    //             case 8:
-    //             case 9:
-    //               password += keypad.getChar;
-    //               break;
-    //             //Кнопка * - удаляет символ
-    //             case 14:
-    //               password.remove(password.length() - 1);    
-    //               break;
-    //             //Кнопка # - окончание ввода пароля
-    //             case 15:
-    //               ////////////////////////////
-    //               password = "";   
-    //               break;    
-    //             //A B C D - сбрассывают пароль   
-    //             default:
-    //               password = "";
-
-    //               break;
-    //           }
-    //         }
-    //       }
+          while (password.length() > 0 && password.length() < 16 && !stopReadPass)          //Режим ввода ПИН-кода будет, пока пользователь не введёт или сбросит пароль
+          {
+            keypad.read();                                                 //Получение нового значения, прошлое уже записано ранее
+            if (keypad.state == ON_PRESS) 
+            {
+              switch (keypad.Numb)
+              {
+                //ПИН-код может состоять только из чисел
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                  password += keypad.Char;
+                  showPassword(password, true);
+                  break;
+                //Кнопка * - удаляет символ
+                case 14:
+                  password.remove(password.length() - 1);  
+                  showPassword(password, false);  
+                  break;
+                //Кнопка # - окончание ввода пароля
+                case 15:
+                  stopReadPass = true;
+                  break;    
+                //A B C D - сбрассывают пароль   
+                default:
+                  password = "";
+                  break;
+              }
+            }
+          }
           
-    //       lcd.clear();
-    //       lcd.setCursor(4, 0);
-    //       lcd.print("Good Day");
+          if (checkPassword(password)) 
+          {
+            /////////////////
 
-    //       break;
-    //     //Вход в меню
-    //     case 10:
-    //     case 11:
-    //     case 12:
-    //     case 13:
-    //       lcd.clear();
-    //       lcd.setCursor(0, 0);
-    //       lcd.print("Menu");
-    //     default:
-    //       break;
-    //   }
-    // }
+          }
+
+          lcd.clear();
+          lcd.setCursor(4, 0);
+          lcd.print("Good Day");
+
+          break;
+        //Вход в меню
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+          lcd.clear();
+          lcd.setCursor(0, 0);
+          lcd.print("Menu");
+        default:
+          break;
+      }
+    }
+
+    if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) checkRFID(getRFID(rfid));    
   }
   else {lcd.noBacklight();}
   /////Нужно добавить прерывние на открытие двери по нажатии кнопки выхода
@@ -259,10 +271,82 @@ long getDistance(uint8_t trig, uint8_t echo)
 }
 
 
-void showPassword(String password)
+void showPassword(String password, bool addOrDel)
 {
-  lcd.setCursor(0,1);
-  lcd.print("                ");
-  lcd.setCursor(0,1);
-  lcd.print(password);
+  if (addOrDel)
+  {
+    lcd.setCursor(password.length() - 1, 1);
+    lcd.print(password[password.length() - 1]);
+    delay(250);
+
+    lcd.setCursor(password.length() - 1, 1);
+    lcd.print("*");
+  }
+  else
+  {
+    lcd.setCursor(password.length(), 1);
+    lcd.print(" ");
+  }
+}
+
+bool checkPassword(String password)
+{
+  lcd.clear();
+
+  if (password.length() != 0) 
+  {
+    lcd.print("Open");
+    delay(2000);
+
+    return true;
+  }
+  else 
+  {
+    lcd.print("Wrong password");
+    delay(2000);
+
+    return false;
+  }
+}
+
+int getRFID(MFRC522 rfid)
+{
+  int key = 0;
+
+  for (int i = 0; i < 4; i++)
+  {
+    key |= rfid.uid.uidByte[i] << ((3-i)*8);
+  }
+
+  rfid.PICC_HaltA();
+  rfid.PCD_StopCrypto1();
+  return key;
+}
+
+bool checkRFID(int key)
+{
+  lcd.clear();
+
+  if (key == 0xE98F8499)
+  {
+    lcd.print("Open");
+    delay(2000);
+
+    lcd.clear();
+    lcd.setCursor(4, 0);
+    lcd.print("Good Day");
+
+    return true;
+  }
+  else
+  {
+    lcd.print("Access Deny");
+    delay(2000);
+
+    lcd.clear();
+    lcd.setCursor(4, 0);
+    lcd.print("Good Day");
+
+    return false;
+  }
 }
