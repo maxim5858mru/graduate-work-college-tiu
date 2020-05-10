@@ -2,9 +2,12 @@
 #define INTERFACE_H
 
 #include <Arduino.h>
+#include <SD.h>
+#include <ArduinoJson.h>
+#include <Adafruit_Fingerprint.h>
+#include <DS1307RTC.h>
 #include <LiquidCrystal_I2C.h>
 #include <MFRC522.h>
-#include <Adafruit_Fingerprint.h>
 #include "../IIC/IIC.h"
 #include "../Timer/Timer.h"
 
@@ -18,39 +21,43 @@ namespace Interface
   */
   long getDistance(uint8_t trig, uint8_t echo);
 
-  /** Сброс экрана
-   * @param lcd - ссылка на дисплей 
+  // Сброс экрана
+  void goHome();
+  /** Открытие двери
+   * @param door - открываемая дверь
    */
-  void goHome(LiquidCrystal_I2C &lcd);
+  void open(uint8_t door);
+  /** Отказ в доступе
+   * @param byTime - причиной отказа является время?
+   */
+  void accessDeny(bool byTime);
 
   /** Вывод пароля (точнее его изменения) на дисплей
    * @param password - вводимый пароль
    * @param becomeMore - пароль увеличился или уменьшился?
-   * @param lcd - ссылка на дисплей 
    */
-  void showPassword(String password, bool becomeMore, LiquidCrystal_I2C &lcd);
+  void showPassword(String password, bool becomeMore);
   /** Проверка пароля
    * @remarks !!!!!Функция ещё не законченна, нужно подключить базу данных 
    * @remarks Открытие двери происходит внутри функции
    * @param password - проверяемый пароль
-   * @param lcd - ссылка на дисплей
    * @return !!!!!Учитывая что открытие двери просходит внутри функции, для чего возратное значение не знаю
    */
-  bool checkPassword(String password, LiquidCrystal_I2C &lcd);
+  bool checkPassword(String password);
 
-  /** Получение ID (NUID) карты RFID
-   * @warning из-за ограниченного размера переменной функуия совестима только с картами с размером 1кб
-   * @param rfid - сылка на считыватель карт
-   * @return NUID карты RFID
-   */
-  int getRFID(MFRC522 &rfid);
-  /** Проверка NUID карты RFID
-   * @remarks !!!!!Функция ещё не законченна, нужно подключить базу данных
+  /** Получение и проверка NUID карты RFID
+   * @remarks !!!!!Функция ещё не законченна, нужно реализовать щагрузку базы с резервной копии
    * @remarks Открытие двери происходит внутри функции
-   * @param password - проверяемый NUID
-   * @param lcd - ссылка на дисплей
    * @return !!!!!Учитывая что открытие двери просходит внутри функции, для чего возратное значение не знаю
    */
-  bool checkRFID(int key, LiquidCrystal_I2C &lcd);
+  bool checkAndGetRFID();
+
+  /** Проверка на попадание в диапазон временни
+   * @warning если часы сбиты, то пропускаем проверку
+   * @param sTime - начальное время
+   * @param eTime - конечное время
+   * @return истина если текущее время подходит под диапазон
+   */
+  bool checkTime(int sTime, int eTime);
 }
 #endif

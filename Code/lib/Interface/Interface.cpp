@@ -1,4 +1,17 @@
+#include <Arduino.h>
+#include <SD.h>
+#include <ArduinoJson.h>
+#include <Adafruit_Fingerprint.h>
+#include <DS1307RTC.h>
+#include <LiquidCrystal_I2C.h>
+#include <MFRC522.h>
+#include "../IIC/IIC.h"
+#include "../Timer/Timer.h"
 #include "Interface.h"
+
+extern LiquidCrystal_I2C lcd;
+extern MFRC522 rfid;
+// extern tmElements_t nowTime;
 
 /** Измерение растояния до объекта, с помощью ультразвукового датчика
  * @warning желательно чтобы объект меньше поглощал звуков
@@ -32,22 +45,44 @@ long Interface::getDistance(uint8_t trig, uint8_t echo)
   return cm;
 }
 
-/** Сброс экрана
- * @param lcd - ссылка на дисплей 
- */
-void Interface::goHome(LiquidCrystal_I2C &lcd)
+// Сброс экрана
+void Interface::goHome()
 {          
   lcd.clear();
   lcd.setCursor(4, 0);
   lcd.print("Good Day");
 }
 
+/** Открытие двери
+ * @param door - открываемая дверь
+ */
+void Interface::open(uint8_t door)
+{
+  lcd.clear();
+  lcd.print("Open");
+  delay(2000);
+
+  goHome();
+}
+
+/** Отказ в доступе
+ * @param - причиной отказа является время?
+ */
+void Interface::accessDeny(bool byTime)
+{
+  lcd.clear();
+  if (byTime) {lcd.print("Wrong Time");}
+  else {lcd.print("Access Deny");}
+  delay(2000);
+
+  goHome();
+}
+
 /** Вывод пароля (точнее его изменения) на дисплей
  * @param password - вводимый пароль
  * @param becomeMore - пароль увеличился или уменьшился?
- * @param lcd - ссылка на дисплей 
  */
-void Interface::showPassword(String password, bool becomeMore, LiquidCrystal_I2C &lcd)
+void Interface::showPassword(String password, bool becomeMore)
 {
   if (becomeMore)
   {
@@ -69,10 +104,9 @@ void Interface::showPassword(String password, bool becomeMore, LiquidCrystal_I2C
  * @remarks !!!!!Функция ещё не законченна, нужно подключить базу данных 
  * @remarks Открытие двери происходит внутри функции
  * @param password - проверяемый пароль
- * @param lcd - ссылка на дисплей
  * @return !!!!!Учитывая что открытие двери просходит внутри функции, для чего возратное значение не знаю
  */
-bool Interface::checkPassword(String password, LiquidCrystal_I2C &lcd)
+bool Interface::checkPassword(String password)
 {
   lcd.clear();
 
@@ -92,56 +126,102 @@ bool Interface::checkPassword(String password, LiquidCrystal_I2C &lcd)
   }
 }
 
-/** Получение ID (NUID) карты RFID
- * @warning из-за ограниченного размера переменной функуия совестима только с картами с размером 1кб
- * @param rfid - сылка на считыватель карт
- * @return NUID карты RFID
+/** Получение и проверка NUID карты RFID
+ * @remarks !!!!!Функция ещё не законченна, нужно реализовать щагрузку базы с резервной копии
+ * @remarks ↓↓↓ Алгоритм ↓↓↓
+ * открой папку
+ * это не папка или она вообще не существует -> скачивай базу данных
+ * открой следующий в папке (первый) файл
+ * цикл перебора файлов
+ *   буффер и переменные JSON
+ *   в записи нет RFID авторизации -> новый файл
+ *     не прошёл проверку массива NUID -> открой новый файл и continue
+ *     не попал по времени -> вывод ошибки по времени и return
+ *     есть еще тербования (методы) -> проверяй. Не получилось? -> вывод ошибки и return
+ *     открой дверь и return  
+ * @return !!!!!Учитывая что открытие двери просходит внутри функции, для чего возратное значение не знаю
  */
-int Interface::getRFID(MFRC522 &rfid)
+bool Interface::checkAndGetRFID()
 {
-  int key = 0;
-
-  for (int i = 0; i < 4; i++)
-  {
-    key |= rfid.uid.uidByte[i] << ((3-i)*8);
-  }
+  byte RFID[10];
+  for (int i = 0; i < 10; i++) {RFID[i] = rfid.uid.uidByte[i];}
 
   rfid.PICC_HaltA();
   rfid.PCD_StopCrypto1();
-  return key;
+  delay(100);
+
+  // Открытие папки базы данных, точнее папки с её записями
+  File folder = SD.open("/Database");
+  if(!folder || !folder.isDirectory()){           // На случай если папку удалят
+    // !!!!! Скачиваем базу данных
+  }
+
+  // Перебор записей. К сожалению, всю базу не запихнуть в буффер, по этому перебор записей пользователей
+  File file = folder.openNextFile();
+  while(file)
+  {
+    DynamicJsonDocument json(600);                // Буффер для файла. Благодаря ему я использую этот тупой костыль-метод
+    deserializeJson(json, file);
+
+    // Объявление переменных для файла
+    JsonArray JMethod = json["Method"]; 
+    if(JMethod[2])                                // Массив Method указывает, какими методами авторизации должен воспользоваться пользователь
+    {
+      bool result = true;
+      JsonArray JRFID = json["RFID"];             // NUID RFID карты состоит из 10 байтов
+
+      for(int i = 0; i < 10; i++)
+      {
+        if(JRFID[i] != RFID[i])
+        {
+          file = folder.openNextFile();           // Каждая запись пользователя в отдельном файле, спасибо буффер...
+          result = false;
+          break;
+        }
+      }
+
+      if (!result) {continue;}                    // Костыль для реализации break label цикла перебора
+
+      //  Проверка на время, но тут в случае ошибки accessDeny
+      // if (!checkTime(json["Start Time"], json["End Time"])) 
+      // {
+      //   accessDeny(true);
+      //   return false;
+      // }
+
+      // !!!!! Проверка на доп. требования
+      // !!!!! .. .. ..
+
+      open(json["Door"]);
+      return true;
+    }  
+    else {file = folder.openNextFile(); }         
+  }
+
+  accessDeny(false);
+  return false;
 }
 
-/** Проверка NUID карты RFID
- * @remarks !!!!!Функция ещё не законченна, нужно подключить базу данных
- * @remarks Открытие двери происходит внутри функции
- * @param password - проверяемый NUID
- * @param lcd - ссылка на дисплей
- * @return !!!!!Учитывая что открытие двери просходит внутри функции, для чего возратное значение не знаю
+/** Проверка на попадание в диапазон временни
+ * @param !!!!! Нужно добавить сихронизацию времени
+ * @warning если часы сбиты, то пропускаем проверку
+ * @param sTime - начальное время
+ * @param eTime - конечное время
+ * @return истина если текущее время подходит под диапазон
  */
-bool Interface::checkRFID(int key, LiquidCrystal_I2C &lcd)
+bool Interface::checkTime(int sTime, int eTime)
 {
-  lcd.clear();
+  int nTime;
+  tmElements_t nowTime;                                
 
-  if (key == 0xE98F8499)
+  // if(!RTC.read(nowTime)) {return true;}            // Если часы ненастроенны ... открываем дверь
+  nTime = nowTime.Hour * 100 + nowTime.Minute;        // Переводим время в удобный формат
+
+  if(sTime < eTime)                             // Проверка на "ночную смену"
   {
-    lcd.print("Open");
-    delay(2000);
-
-    lcd.clear();
-    lcd.setCursor(4, 0);
-    lcd.print("Good Day");
-
-    return true;
+    if(sTime <= nTime && eTime >= nTime) {return true;}
   }
-  else
-  {
-    lcd.print("Access Deny");
-    delay(2000);
+  else if((sTime >= nTime) == (eTime >= nTime)) {return true;}
 
-    lcd.clear();
-    lcd.setCursor(4, 0);
-    lcd.print("Good Day");
-
-    return false;
-  }
+  return false;
 }

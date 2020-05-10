@@ -65,7 +65,7 @@ void setup()
   // Инициализация компонентов
   if (NeedSerial) {Serial.begin(115200);}         // UART
   if (Buzzer) {ledcSetup(0, 600, 8);}             // Настройка ШИМ для пьезодинамика
-  if (SD.begin() && SD.cardType() != CARD_NONE && SD.cardType() != CARD_UNKNOWN) {SDWorking = true;} //Монтирование файловой системы
+  if (SD.begin() && SD.cardType() != CARD_NONE && SD.cardType() != CARD_UNKNOWN) {SDWorking = true;}// Монтирование файловой системы
   else if (ShowError) {Serial.println("Error mounting SD");}
 
   // Настройка Wi-Fi
@@ -124,7 +124,7 @@ void setup()
   }
 
   lcd.backlight();
-  Interface::goHome(lcd);
+  Interface::goHome();
 }
 
 void loop()
@@ -132,7 +132,7 @@ void loop()
   ArduinoOTA.handle();
   
   // Проверка растояния 
-  if (Interface::getDistance(15, 4) < 60 || timer.timerIsWorking())                   // Для экономии подсветки
+  if (Interface::getDistance(15, 4) < 60 || timer.timerIsWorking())        // Для экономии подсветки
   {
     // Таймер работает, когда никого нету по близости
     if (Interface::getDistance(15, 4) < 60) 
@@ -164,18 +164,18 @@ void loop()
           lcd.clear();
           lcd.print("PIN");
 
-          //Ввод кода
+          // Ввод кода
           password = keypad.Char;
-          Interface::showPassword(password, true, lcd);
+          Interface::showPassword(password, true);
 
-          while (password.length() > 0 && password.length() < 16 && !stopReadPass)          //Режим ввода ПИН-кода будет, пока пользователь не введёт или сбросит пароль
+          while (password.length() > 0 && password.length() < 16 && !stopReadPass)                  // Режим ввода ПИН-кода будет, пока пользователь не введёт или сбросит пароль
           {
-            keypad.read();                                                 //Получение нового значения, прошлое уже записано ранее
+            keypad.read();                                                 // Получение нового значения, прошлое уже записано ранее
             if (keypad.state == ON_PRESS) 
             {
               switch (keypad.Numb)
               {
-                //ПИН-код может состоять только из чисел
+                // ПИН-код может состоять только из чисел
                 case 0:
                 case 1:
                 case 2:
@@ -187,18 +187,18 @@ void loop()
                 case 8:
                 case 9:
                   password += keypad.Char;
-                  Interface::showPassword(password, true, lcd);
+                  Interface::showPassword(password, true);
                   break;
-                //Кнопка * - удаляет символ
+                // Кнопка * - удаляет символ
                 case 14:
                   password.remove(password.length() - 1);  
-                  Interface::showPassword(password, false, lcd);  
+                  Interface::showPassword(password, false);  
                   break;
-                //Кнопка # - окончание ввода пароля
+                // Кнопка # - окончание ввода пароля
                 case 15:
                   stopReadPass = true;
                   break;    
-                //A B C D - сбрассывают пароль   
+                // A B C D - сбрассывают пароль   
                 default:
                   password = "";
                   break;
@@ -206,8 +206,8 @@ void loop()
             }
           }
           
-          Interface::checkPassword(password, lcd);
-          Interface::goHome(lcd);
+          Interface::checkPassword(password);
+          Interface::goHome();
 
           break;
         //Вход в меню
@@ -223,7 +223,7 @@ void loop()
       }
     }
 
-    if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {Interface::checkRFID(Interface::getRFID(rfid), lcd);}   
+    if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {Interface::checkAndGetRFID();}   
   }
   else {lcd.noBacklight();}
 

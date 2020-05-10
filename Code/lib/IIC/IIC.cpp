@@ -562,3 +562,84 @@ bool Keypad::read()
   _numbWas = _numbNow;
   return _forReturn;
 }
+
+Clock::Clock(int address, bool doRead)
+{
+  _address = address;
+  if (doRead) 
+  {
+    Wire.begin();
+    Wire.beginTransmission(_address);
+    int code = Wire.endTransmission();
+
+    if (code != 0) 
+    {
+      status = false;
+      wasError = true;
+    }
+    else 
+    {
+      status = true;
+      read(true, false);
+    }
+  }
+}
+
+bool Clock::read(bool checkTryAgain, bool showError)
+{
+  byte temp;
+  wasError = false;
+
+  for (int i = checkTryAgain?1:3; i <= 3; i++)
+  {
+    Wire.beginTransmission(_address);
+    Wire.requestFrom(_address, 8);
+
+    //Обработка нулевого байта. Содержит вкл./выкл. и секунды
+    temp = Wire.read();
+    working = temp & 0b10000000;
+    seconds = temp & 0b1111111;
+    Wire.endTransmission();
+
+    // Первый байт - минуты.
+    minutes = Wire.read();
+
+    // Второй байт - часы и их режим
+    temp = Wire.read();
+    mode = temp & 0b1000000;  
+    if (mode)
+    {
+      AM_PM = temp & 0b100000;
+      hours = temp * 0b11111;
+    }
+    else
+    {
+      AM_PM = false;
+      hours = temp * 0b111111;
+    }
+
+    // Третий байт - день недели
+    day = Wire.read() & 0b111;
+
+    // Четвёрты байт - день (число)
+    date = Wire.read() & 0b111111;
+
+    // Пятый байт - месяц
+    month = Wire.read() & 0b11111;
+
+    // Шестой байт - год
+    year = Wire.read();
+
+    // Седьмой байт - параметры часов
+    temp = Wire.read();
+    OUT = temp & 0b10000000;
+    SQWE = temp & 0b10000;
+    quarts = temp & 0b11;
+
+    int code = Wire.endTransmission();
+    if (code == 0) {return true;}
+  }
+
+  wasError = true;
+  return false;
+}

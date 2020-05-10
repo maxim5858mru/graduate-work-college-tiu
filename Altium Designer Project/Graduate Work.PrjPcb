@@ -28,7 +28,7 @@ DItemRevisionGUID=
 ReportSuppressedErrorsInMessages=0
 FSMCodingStyle=eFMSDropDownList_OneProcess
 FSMEncodingStyle=eFMSDropDownList_OneHot
-OutputPath=
+OutputPath=Project Outputs for Graduate Work
 LogFolderPath=
 ManagedProjectGUID=
 IncludeDesignInRelease=0
@@ -72,7 +72,7 @@ GenerateClassCluster=0
 DocumentUniqueId=BQTTVAYW
 
 [Document3]
-DocumentPath=PCB.PcbDoc
+DocumentPath=SPCB.PcbDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -89,6 +89,23 @@ GenerateClassCluster=0
 DocumentUniqueId=GOFKLIFR
 
 [Document4]
+DocumentPath=PCB.PcbDoc
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=1
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=GOFKLIFR
+
+[Document5]
 DocumentPath=Job.OutJob
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -105,7 +122,41 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=
 
-[Document5]
+[Document6]
+DocumentPath=Sheet4.SchDoc
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=1
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=UKPYVHLF
+
+[Document7]
+DocumentPath=Sheet5.SchDoc
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=1
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=WENJOQEQ
+
+[Document8]
 DocumentPath=Sheet1.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -122,7 +173,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=WDBTJODH
 
-[Document6]
+[Document9]
 DocumentPath=Sheet2.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -139,7 +190,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=DEMFMWGF
 
-[Document7]
+[Document10]
 DocumentPath=Sheet3.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -189,12 +240,120 @@ DocumentPath=Project Outputs for Graduate Work\NC Drill\PCB.LDP
 DItemRevisionGUID=
 
 [GeneratedDocument9]
-DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.REP
+DocumentPath=Документация\PCB.PcbDoc.pdf
 DItemRevisionGUID=
 
 [GeneratedDocument10]
+DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.REP
+DItemRevisionGUID=
+
+[GeneratedDocument11]
 DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.RUL
 DItemRevisionGUID=
+
+[Parameter1]
+Name=Дата изменения
+Value=
+
+[Parameter2]
+Name=Доп.согл.
+Value=
+
+[Parameter3]
+Name=Инвентарный номер дубликата
+Value=
+
+[Parameter4]
+Name=Индекс заказчика
+Value=
+
+[Parameter5]
+Name=Компания
+Value=
+
+[Parameter6]
+Name=Литера1
+Value=
+
+[Parameter7]
+Name=Литера2
+Value=
+
+[Parameter8]
+Name=Литера3
+Value=
+
+[Parameter9]
+Name=Наименование
+Value=
+
+[Parameter10]
+Name=Наименование1
+Value=
+
+[Parameter11]
+Name=Наименование2
+Value=
+
+[Parameter12]
+Name=Начальник отдела
+Value=
+
+[Parameter13]
+Name=Номер УД
+Value=
+
+[Parameter14]
+Name=Номер извещения
+Value=
+
+[Parameter15]
+Name=Нормоконтроль
+Value=
+
+[Parameter16]
+Name=Обозначение
+Value=
+
+[Parameter17]
+Name=Первичная применяемость
+Value=
+
+[Parameter18]
+Name=Порядковый номер изменения
+Value=
+
+[Parameter19]
+Name=Проверил
+Value=
+
+[Parameter20]
+Name=Разработал
+Value=
+
+[Parameter21]
+Name=Решение1
+Value=
+
+[Parameter22]
+Name=Решение2
+Value=
+
+[Parameter23]
+Name=Технолог
+Value=
+
+[Parameter24]
+Name=Тип документа
+Value=
+
+[Parameter25]
+Name=Указания об изменении листа
+Value=
+
+[Parameter26]
+Name=Утвердил
+Value=
 
 [Configuration1]
 Name=Sources
@@ -207,12 +366,12 @@ ContentTypeGUID=CB6F2064-E317-11DF-B822-12313F0024A2
 ConfigurationType=Source
 
 [Generic_EDE]
-OutputDir=
+OutputDir=Project Outputs for Graduate Work
 
 [OutputGroup1]
 Name=Netlist Outputs
 Description=
-TargetPrinter=Canon PIXMA TS8040 Wi-Fi Direct
+TargetPrinter=Canon PIXMA TS8040
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 OutputType1=CadnetixNetlist
 OutputName1=Cadnetix Netlist
@@ -318,7 +477,7 @@ OutputDefault20=0
 [OutputGroup2]
 Name=Simulator Outputs
 Description=
-TargetPrinter=Canon PIXMA TS8040 Wi-Fi Direct
+TargetPrinter=Canon PIXMA TS8040
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 
 [OutputGroup3]
@@ -398,7 +557,7 @@ PageOptions11=Record=PageOptions|CenterHorizontal=True|CenterVertical=True|Print
 [OutputGroup4]
 Name=Assembly Outputs
 Description=
-TargetPrinter=Canon PIXMA TS8040 Wi-Fi Direct
+TargetPrinter=Canon PIXMA TS8040
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 OutputType1=Assembly
 OutputName1=Assembly Drawings
@@ -420,7 +579,7 @@ OutputDefault3=0
 [OutputGroup5]
 Name=Fabrication Outputs
 Description=
-TargetPrinter=Canon PIXMA TS8040 Wi-Fi Direct
+TargetPrinter=Canon PIXMA TS8040
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 OutputType1=Board Stack Report
 OutputName1=Report Board Stack
@@ -492,7 +651,7 @@ OutputDefault12=0
 [OutputGroup6]
 Name=Report Outputs
 Description=
-TargetPrinter=Canon PIXMA TS8040 Wi-Fi Direct
+TargetPrinter=Canon PIXMA TS8040
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 OutputType1=BOM_PartType
 OutputName1=Bill of Materials
@@ -533,7 +692,7 @@ OutputDefault6=0
 [OutputGroup7]
 Name=Other Outputs
 Description=
-TargetPrinter=Canon PIXMA TS8040 Wi-Fi Direct
+TargetPrinter=Canon PIXMA TS8040
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 OutputType1=Text Print
 OutputName1=Text Print
@@ -713,7 +872,7 @@ PageOptions29=Record=PageOptions|CenterHorizontal=True|CenterVertical=True|Print
 [OutputGroup8]
 Name=Validation Outputs
 Description=
-TargetPrinter=Canon PIXMA TS8040 Wi-Fi Direct
+TargetPrinter=Canon PIXMA TS8040
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 OutputType1=BOM_Violations
 OutputName1=BOM Checks Report
@@ -757,7 +916,7 @@ OutputDefault7=0
 [OutputGroup9]
 Name=Export Outputs
 Description=
-TargetPrinter=Canon PIXMA TS8040 Wi-Fi Direct
+TargetPrinter=Canon PIXMA TS8040
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 OutputType1=AutoCAD dwg/dxf PCB
 OutputName1=AutoCAD dwg/dxf File PCB
@@ -818,7 +977,7 @@ OutputDefault11=0
 [OutputGroup10]
 Name=PostProcess Outputs
 Description=
-TargetPrinter=Canon PIXMA TS8040 Wi-Fi Direct
+TargetPrinter=Canon PIXMA TS8040
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 OutputType1=Copy Files
 OutputName1=Copy Files
@@ -1187,89 +1346,209 @@ UpdateVariants=1
 UpdateToLatestRevision=1
 PartTypes=0
 ComponentLibIdentifierKind0=Library Name And Type
-ComponentLibraryIdentifier0=User Library.IntLib
+ComponentLibraryIdentifier0=Schlib.SchLib
 ComponentDesignItemID0=AMS1117
 ComponentSymbolReference0=AMS1117
 ComponentUpdate0=1
 ComponentIsDeviceSheet0=0
 ComponentLibIdentifierKind1=Library Name And Type
-ComponentLibraryIdentifier1=User Library.IntLib
-ComponentDesignItemID1=CH340G
-ComponentSymbolReference1=CH340G
-ComponentUpdate1=1
+ComponentLibraryIdentifier1=Schlib.SchLib
+ComponentDesignItemID1=AT24C
+ComponentSymbolReference1=AT24C
+ComponentUpdate1=0
 ComponentIsDeviceSheet1=0
 ComponentLibIdentifierKind2=Library Name And Type
-ComponentLibraryIdentifier2=User Library.IntLib
-ComponentDesignItemID2=DW01
-ComponentSymbolReference2=DW01
-ComponentUpdate2=1
+ComponentLibraryIdentifier2=Schlib.SchLib
+ComponentDesignItemID2=CH340G
+ComponentSymbolReference2=CH340G
+ComponentUpdate2=0
 ComponentIsDeviceSheet2=0
 ComponentLibIdentifierKind3=Library Name And Type
-ComponentLibraryIdentifier3=User Library.IntLib
-ComponentDesignItemID3=ESP32-WROOM
-ComponentSymbolReference3=ESP32-WROOM
-ComponentUpdate3=1
+ComponentLibraryIdentifier3=Schlib.SchLib
+ComponentDesignItemID3=DS1307
+ComponentSymbolReference3=DS1307
+ComponentUpdate3=0
 ComponentIsDeviceSheet3=0
 ComponentLibIdentifierKind4=Library Name And Type
-ComponentLibraryIdentifier4=User Library.IntLib
-ComponentDesignItemID4=FS8205
-ComponentSymbolReference4=FS8205
-ComponentUpdate4=1
+ComponentLibraryIdentifier4=Schlib.SchLib
+ComponentDesignItemID4=DW01
+ComponentSymbolReference4=DW01
+ComponentUpdate4=0
 ComponentIsDeviceSheet4=0
 ComponentLibIdentifierKind5=Library Name And Type
-ComponentLibraryIdentifier5=User Library.IntLib
-ComponentDesignItemID5=microSD
-ComponentSymbolReference5=microSD
-ComponentUpdate5=1
+ComponentLibraryIdentifier5=Schlib.SchLib
+ComponentDesignItemID5=ESP32-WROOM
+ComponentSymbolReference5=ESP32-WROOM
+ComponentUpdate5=0
 ComponentIsDeviceSheet5=0
 ComponentLibIdentifierKind6=Library Name And Type
-ComponentLibraryIdentifier6=User Library.IntLib
-ComponentDesignItemID6=TP4056
-ComponentSymbolReference6=TP4056
-ComponentUpdate6=1
+ComponentLibraryIdentifier6=Schlib.SchLib
+ComponentDesignItemID6=FS8205
+ComponentSymbolReference6=FS8205
+ComponentUpdate6=0
 ComponentIsDeviceSheet6=0
 ComponentLibIdentifierKind7=Library Name And Type
-ComponentLibraryIdentifier7=User Library.IntLib
-ComponentDesignItemID7=USB B
-ComponentSymbolReference7=USB B
-ComponentUpdate7=1
+ComponentLibraryIdentifier7=Schlib.SchLib
+ComponentDesignItemID7=LCD HD44780
+ComponentSymbolReference7=LCD HD44780
+ComponentUpdate7=0
 ComponentIsDeviceSheet7=0
 ComponentLibIdentifierKind8=Library Name And Type
-ComponentLibraryIdentifier8=User Library.IntLib
-ComponentDesignItemID8=Батарея
-ComponentSymbolReference8=Батарея
-ComponentUpdate8=1
+ComponentLibraryIdentifier8=Schlib.SchLib
+ComponentDesignItemID8=microSD
+ComponentSymbolReference8=microSD
+ComponentUpdate8=0
 ComponentIsDeviceSheet8=0
 ComponentLibIdentifierKind9=Library Name And Type
-ComponentLibraryIdentifier9=User Library.IntLib
-ComponentDesignItemID9=Кварцевый Резонатор
-ComponentSymbolReference9=Кварцевый Резонатор
-ComponentUpdate9=1
+ComponentLibraryIdentifier9=Schlib.SchLib
+ComponentDesignItemID9=MT3608
+ComponentSymbolReference9=MT3608
+ComponentUpdate9=0
 ComponentIsDeviceSheet9=0
 ComponentLibIdentifierKind10=Library Name And Type
-ComponentLibraryIdentifier10=User Library.IntLib
-ComponentDesignItemID10=Конденсатор Полярный
-ComponentSymbolReference10=Конденсатор Полярный
-ComponentUpdate10=1
+ComponentLibraryIdentifier10=Schlib.SchLib
+ComponentDesignItemID10=PCF8574
+ComponentSymbolReference10=PCF8574
+ComponentUpdate10=0
 ComponentIsDeviceSheet10=0
 ComponentLibIdentifierKind11=Library Name And Type
-ComponentLibraryIdentifier11=User Library.IntLib
-ComponentDesignItemID11=Конденсатор
-ComponentSymbolReference11=Конденсатор
-ComponentUpdate11=1
+ComponentLibraryIdentifier11=Schlib.SchLib
+ComponentDesignItemID11=PLS/PBS-8
+ComponentSymbolReference11=PLS/PBS-8
+ComponentUpdate11=0
 ComponentIsDeviceSheet11=0
 ComponentLibIdentifierKind12=Library Name And Type
-ComponentLibraryIdentifier12=User Library.IntLib
-ComponentDesignItemID12=Резистор
-ComponentSymbolReference12=Резистор
-ComponentUpdate12=1
+ComponentLibraryIdentifier12=Schlib.SchLib
+ComponentDesignItemID12=PLS-4
+ComponentSymbolReference12=PLS-4
+ComponentUpdate12=0
 ComponentIsDeviceSheet12=0
 ComponentLibIdentifierKind13=Library Name And Type
-ComponentLibraryIdentifier13=User Library.IntLib
-ComponentDesignItemID13=Светодиод
-ComponentSymbolReference13=Светодиод
-ComponentUpdate13=1
+ComponentLibraryIdentifier13=Schlib.SchLib
+ComponentDesignItemID13=PLS-6
+ComponentSymbolReference13=PLS-6
+ComponentUpdate13=0
 ComponentIsDeviceSheet13=0
+ComponentLibIdentifierKind14=Library Name And Type
+ComponentLibraryIdentifier14=Schlib.SchLib
+ComponentDesignItemID14=SN74LVC1T45
+ComponentSymbolReference14=SN74LVC1T45
+ComponentUpdate14=0
+ComponentIsDeviceSheet14=0
+ComponentLibIdentifierKind15=Library Name And Type
+ComponentLibraryIdentifier15=Schlib.SchLib
+ComponentDesignItemID15=TP4056
+ComponentSymbolReference15=TP4056
+ComponentUpdate15=0
+ComponentIsDeviceSheet15=0
+ComponentLibIdentifierKind16=Library Name And Type
+ComponentLibraryIdentifier16=Schlib.SchLib
+ComponentDesignItemID16=USB B
+ComponentSymbolReference16=USB B
+ComponentUpdate16=0
+ComponentIsDeviceSheet16=0
+ComponentLibIdentifierKind17=Library Name And Type
+ComponentLibraryIdentifier17=Schlib.SchLib
+ComponentDesignItemID17=Батарея
+ComponentSymbolReference17=Батарея
+ComponentUpdate17=0
+ComponentIsDeviceSheet17=0
+ComponentLibIdentifierKind18=Library Name And Type
+ComponentLibraryIdentifier18=Schlib.SchLib
+ComponentDesignItemID18=Биполярный Транзистор
+ComponentSymbolReference18=Биполярный Транзистор
+ComponentUpdate18=0
+ComponentIsDeviceSheet18=0
+ComponentLibIdentifierKind19=Library Name And Type
+ComponentLibraryIdentifier19=Schlib.SchLib
+ComponentDesignItemID19=Винтовой Клеммник 3 Pin
+ComponentSymbolReference19=Винтовой Клеммник 3 Pin
+ComponentUpdate19=0
+ComponentIsDeviceSheet19=0
+ComponentLibIdentifierKind20=Library Name And Type
+ComponentLibraryIdentifier20=Schlib.SchLib
+ComponentDesignItemID20=Диод Шотки
+ComponentSymbolReference20=Диод Шотки
+ComponentUpdate20=0
+ComponentIsDeviceSheet20=0
+ComponentLibIdentifierKind21=Library Name And Type
+ComponentLibraryIdentifier21=Schlib.SchLib
+ComponentDesignItemID21=Катушка индуктивности
+ComponentSymbolReference21=Катушка индуктивности
+ComponentUpdate21=0
+ComponentIsDeviceSheet21=0
+ComponentLibIdentifierKind22=Library Name And Type
+ComponentLibraryIdentifier22=Schlib.SchLib
+ComponentDesignItemID22=Кварцевый Резонатор
+ComponentSymbolReference22=Кварцевый Резонатор
+ComponentUpdate22=0
+ComponentIsDeviceSheet22=0
+ComponentLibIdentifierKind23=Library Name And Type
+ComponentLibraryIdentifier23=Schlib.SchLib
+ComponentDesignItemID23=Кнопка
+ComponentSymbolReference23=Кнопка
+ComponentUpdate23=0
+ComponentIsDeviceSheet23=0
+ComponentLibIdentifierKind24=Library Name And Type
+ComponentLibraryIdentifier24=Schlib.SchLib
+ComponentDesignItemID24=Конденсатор Полярный
+ComponentSymbolReference24=Конденсатор Полярный
+ComponentUpdate24=0
+ComponentIsDeviceSheet24=0
+ComponentLibIdentifierKind25=Library Name And Type
+ComponentLibraryIdentifier25=Schlib.SchLib
+ComponentDesignItemID25=Конденсатор
+ComponentSymbolReference25=Конденсатор
+ComponentUpdate25=0
+ComponentIsDeviceSheet25=0
+ComponentLibIdentifierKind26=Library Name And Type
+ComponentLibraryIdentifier26=Schlib.SchLib
+ComponentDesignItemID26=Матричная Клавиатура 4x4
+ComponentSymbolReference26=Матричная Клавиатура 4x4
+ComponentUpdate26=0
+ComponentIsDeviceSheet26=0
+ComponentLibIdentifierKind27=Library Name And Type
+ComponentLibraryIdentifier27=Schlib.SchLib
+ComponentDesignItemID27=Подстроечный Резистор
+ComponentSymbolReference27=Подстроечный Резистор
+ComponentUpdate27=0
+ComponentIsDeviceSheet27=0
+ComponentLibIdentifierKind28=Library Name And Type
+ComponentLibraryIdentifier28=Schlib.SchLib
+ComponentDesignItemID28=Пьездодинамик
+ComponentSymbolReference28=Пьездодинамик
+ComponentUpdate28=0
+ComponentIsDeviceSheet28=0
+ComponentLibIdentifierKind29=Library Name And Type
+ComponentLibraryIdentifier29=Schlib.SchLib
+ComponentDesignItemID29=Резистор 0.25 Вт
+ComponentSymbolReference29=Резистор 0.25 Вт
+ComponentUpdate29=0
+ComponentIsDeviceSheet29=0
+ComponentLibIdentifierKind30=Library Name And Type
+ComponentLibraryIdentifier30=Schlib.SchLib
+ComponentDesignItemID30=Резистор 0.5 Вт
+ComponentSymbolReference30=Резистор 0.5 Вт
+ComponentUpdate30=0
+ComponentIsDeviceSheet30=0
+ComponentLibIdentifierKind31=Library Name And Type
+ComponentLibraryIdentifier31=Schlib.SchLib
+ComponentDesignItemID31=Резистор 1 Вт
+ComponentSymbolReference31=Резистор 1 Вт
+ComponentUpdate31=0
+ComponentIsDeviceSheet31=0
+ComponentLibIdentifierKind32=Library Name And Type
+ComponentLibraryIdentifier32=Schlib.SchLib
+ComponentDesignItemID32=Реле SRD-05VDC
+ComponentSymbolReference32=Реле SRD-05VDC
+ComponentUpdate32=0
+ComponentIsDeviceSheet32=0
+ComponentLibIdentifierKind33=Library Name And Type
+ComponentLibraryIdentifier33=Schlib.SchLib
+ComponentDesignItemID33=Светодиод
+ComponentSymbolReference33=Светодиод
+ComponentUpdate33=0
+ComponentIsDeviceSheet33=0
 FullReplace=1
 UpdateDesignatorLock=1
 UpdatePartIDLock=1
@@ -1287,51 +1566,215 @@ ParameterName0=Capacity
 ParameterUpdate0=1
 ParameterName1=Case
 ParameterUpdate1=1
-ParameterName2=Color
+ParameterName2=CharacterResolution
 ParameterUpdate2=1
-ParameterName3=Comment
+ParameterName3=Color
 ParameterUpdate3=1
-ParameterName4=Component Kind
+ParameterName4=Comment
 ParameterUpdate4=1
-ParameterName5=ComponentLink1Description
+ParameterName5=CommentText
 ParameterUpdate5=1
-ParameterName6=ComponentLink1URL
+ParameterName6=Component Kind
 ParameterUpdate6=1
-ParameterName7=ComponentLink2Description
+ParameterName7=ComponentLink1Description
 ParameterUpdate7=1
-ParameterName8=ComponentLink2URL
+ParameterName8=ComponentLink1URL
 ParameterUpdate8=1
-ParameterName9=ComponentLink3Description
+ParameterName9=ComponentLink2Description
 ParameterUpdate9=1
-ParameterName10=ComponentLink3URL
+ParameterName10=ComponentLink2URL
 ParameterUpdate10=1
-ParameterName11=ComponentLink4Description
+ParameterName11=ComponentLink3Description
 ParameterUpdate11=1
-ParameterName12=ComponentLink4URL
+ParameterName12=ComponentLink3URL
 ParameterUpdate12=1
-ParameterName13=Description
+ParameterName13=ComponentLink4Description
 ParameterUpdate13=1
-ParameterName14=Frequency
+ParameterName14=ComponentLink4URL
 ParameterUpdate14=1
-ParameterName15=Library Reference
+ParameterName15=CurrentMax
 ParameterUpdate15=1
-ParameterName16=Manufacturer
+ParameterName16=Description
 ParameterUpdate16=1
-ParameterName17=Model
+ParameterName17=Device Revision
 ParameterUpdate17=1
-ParameterName18=Power
+ParameterName18=Diameter
 ParameterUpdate18=1
-ParameterName19=TypeConnector
+ParameterName19=For
 ParameterUpdate19=1
-ParameterName20=Value
+ParameterName20=Frequency
 ParameterUpdate20=1
-ParameterName21=Voltage
+ParameterName21=Library Reference
 ParameterUpdate21=1
+ParameterName22=Manufacturer
+ParameterUpdate22=1
+ParameterName23=MaxCurrent
+ParameterUpdate23=1
+ParameterName24=Memory Size
+ParameterUpdate24=1
+ParameterName25=Model
+ParameterUpdate25=1
+ParameterName26=Multichannel
+ParameterUpdate26=1
+ParameterName27=Pitch
+ParameterUpdate27=1
+ParameterName28=Power
+ParameterUpdate28=1
+ParameterName29=ScreenResolution
+ParameterUpdate29=1
+ParameterName30=Size
+ParameterUpdate30=1
+ParameterName31=Temperature
+ParameterUpdate31=1
+ParameterName32=Text1
+ParameterUpdate32=1
+ParameterName33=Text2
+ParameterUpdate33=1
+ParameterName34=Text3
+ParameterUpdate34=1
+ParameterName35=Text4
+ParameterUpdate35=1
+ParameterName36=Text5
+ParameterUpdate36=1
+ParameterName37=Text6
+ParameterUpdate37=1
+ParameterName38=Text7
+ParameterUpdate38=1
+ParameterName39=Text8
+ParameterUpdate39=1
+ParameterName40=Type
+ParameterUpdate40=1
+ParameterName41=TypeConnector
+ParameterUpdate41=1
+ParameterName42=TypeRelay
+ParameterUpdate42=1
+ParameterName43=Value
+ParameterUpdate43=1
+ParameterName44=Voltage
+ParameterUpdate44=1
+ParameterName45=VoltageControlCoil
+ParameterUpdate45=1
+ParameterName46=VoltageMax
+ParameterUpdate46=1
 ModelTypeGroup0=PCBLIB
 ModelTypeUpdate0=1
 ModelType0=PCBLIB
-ModelName0=R0402
+ModelName0=C D8
 ModelUpdate0=1
+ModelType1=PCBLIB
+ModelName1=C USSR 0.1
+ModelUpdate1=1
+ModelType2=PCBLIB
+ModelName2=C USSR 0.2
+ModelUpdate2=1
+ModelType3=PCBLIB
+ModelName3=C USSR 0.3
+ModelUpdate3=1
+ModelType4=PCBLIB
+ModelName4=D ESP-WROOOM-32
+ModelUpdate4=1
+ModelType5=PCBLIB
+ModelName5=GB 18650
+ModelUpdate5=1
+ModelType6=PCBLIB
+ModelName6=GB CR2032
+ModelUpdate6=1
+ModelType7=PCBLIB
+ModelName7=HA TMB12A05
+ModelUpdate7=1
+ModelType8=PCBLIB
+ModelName8=HL LED-D5.0
+ModelUpdate8=1
+ModelType9=PCBLIB
+ModelName9=K SRA-05VDC-CL
+ModelUpdate9=1
+ModelType10=PCBLIB
+ModelName10=L D12
+ModelUpdate10=1
+ModelType11=PCBLIB
+ModelName11=R ADJ-3296W
+ModelUpdate11=1
+ModelType12=PCBLIB
+ModelName12=R AXIAL-0.25W
+ModelUpdate12=1
+ModelType13=PCBLIB
+ModelName13=R AXIAL-0.5W
+ModelUpdate13=1
+ModelType14=PCBLIB
+ModelName14=R AXIAL-1W
+ModelUpdate14=1
+ModelType15=PCBLIB
+ModelName15=SB 3.5x6
+ModelUpdate15=1
+ModelType16=PCBLIB
+ModelName16=SB SMD3.5x6
+ModelUpdate16=1
+ModelType17=PCBLIB
+ModelName17=SOIC-8
+ModelUpdate17=1
+ModelType18=PCBLIB
+ModelName18=SOT-223
+ModelUpdate18=1
+ModelType19=PCBLIB
+ModelName19=TO-252
+ModelUpdate19=1
+ModelType20=PCBLIB
+ModelName20=U DIP-16
+ModelUpdate20=1
+ModelType21=PCBLIB
+ModelName21=U DIP-8
+ModelUpdate21=1
+ModelType22=PCBLIB
+ModelName22=U SOIC-16
+ModelUpdate22=1
+ModelType23=PCBLIB
+ModelName23=U SOIC-8
+ModelUpdate23=1
+ModelType24=PCBLIB
+ModelName24=U SOT-23-6
+ModelUpdate24=1
+ModelType25=PCBLIB
+ModelName25=U TSSOP-8
+ModelUpdate25=1
+ModelType26=PCBLIB
+ModelName26=VD DO-214AB
+ModelUpdate26=1
+ModelType27=PCBLIB
+ModelName27=VT TO-92
+ModelUpdate27=1
+ModelType28=PCBLIB
+ModelName28=X 301-021-12
+ModelUpdate28=1
+ModelType29=PCBLIB
+ModelName29=X 301-031-12
+ModelUpdate29=1
+ModelType30=PCBLIB
+ModelName30=X microSD
+ModelUpdate30=1
+ModelType31=PCBLIB
+ModelName31=X PBS-16
+ModelUpdate31=1
+ModelType32=PCBLIB
+ModelName32=X PBS-8
+ModelUpdate32=1
+ModelType33=PCBLIB
+ModelName33=X PLS-4R
+ModelUpdate33=1
+ModelType34=PCBLIB
+ModelName34=X PLS-6
+ModelUpdate34=1
+ModelType35=PCBLIB
+ModelName35=X PLS-8
+ModelUpdate35=1
+ModelType36=PCBLIB
+ModelName36=X USBB-1J
+ModelUpdate36=1
+ModelType37=PCBLIB
+ModelName37=Z DT-26
+ModelUpdate37=1
+ModelType38=PCBLIB
+ModelName38=Z HC-49
+ModelUpdate38=1
 
 [DatabaseUpdateOptions]
 SelectedOnly=0

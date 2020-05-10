@@ -1,15 +1,13 @@
 Code/.vscode
 Code/.gitignore
 Code/.pio
-Test Code/STM32/.pio
-Test Code/STM32/.vscode
-Test Code/STM32/.gitignore
-Test Code/ESP32/.pio
-Test Code/ESP32/.vscode
-Test Code/ESP32/.gitignore
-Test Code/AVR/.vscode
-Test Code/AVR/.pio
-Test Code/AVR/.gitignore
-Test Code/Arduino Nano/.vscode
-Test Code/Arduino Nano/.pio
-Test Code/Arduino Nano/.gitignore
+Test Code/.pio
+Test Code/.vscode
+Test Code/.gitignore
+Altium Designer Project/History
+Altium Designer Project/__Previews
+Altium Designer Project/Template/__Previews
+Altium Designer Project/Library/History
+Altium Designer Project/Project Logs for Graduate Work
+Altium Designer Project/Project Outputs for Graduate Work/Gerber/__Previews
+Altium Designer Project/Project Outputs for Graduate Work/NC Drill/__Previews
