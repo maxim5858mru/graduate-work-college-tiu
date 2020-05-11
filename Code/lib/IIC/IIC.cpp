@@ -1,9 +1,17 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <ArduinoJson.h>
+#include <TimeLib.h>
 #include "IIC.h"
 
 #define ERROR_CODE 0xFF
 
+/** Память подключаемая по IIC. Инициализация конструктором включает в себя инициализацию памяти (begin), но из-за особенностей компилятора, библиотека Wire (а значит и все функции этой библиотеки) работает только в основном теле кода.
+ * @param address - адрес памяти в шине IIC, начинается с 0b1010XXX
+ * @param clock - частота шины I2C [10k, 100k, 1M]
+ */
 EEPROM::EEPROM(uint8_t address, int clock)
 {
   _address = address;
@@ -90,8 +98,8 @@ byte EEPROM::readbyte(int memoryAddress, bool checkTryAgain, bool showError, con
       // Обработка кода ошибки
       if (code != 0 && showError)                 // Вывод ошибки... если нужно
       {
-        if (called) {Serial.printf("Error (%d,%d of 3) sending address 0x%x for readbyte, called by %s: 0d%d", i, y, memoryAddress, called, code);}
-        else {Serial.printf("Error (%d,%d of 3) sending address 0x%x for readbyte: 0d%d", i, y, memoryAddress, code);}
+        if (called) {Serial.printf("Error (%d,%d of 3) sending address 0x%x for readbyte, called by %s: 0d%d\n", i, y, memoryAddress, called, code);}
+        else {Serial.printf("Error (%d,%d of 3) sending address 0x%x for readbyte: 0d%d\n", i, y, memoryAddress, code);}
       }
 
       if (code == 0) {y = 3;}                     // Досрочный выход из цикла попыток отправки адреса
@@ -107,8 +115,8 @@ byte EEPROM::readbyte(int memoryAddress, bool checkTryAgain, bool showError, con
     // Обработка кода ошибки
     if (code != 0 && showError)
     {
-      if (called) {Serial.printf("Error (%d of 3) receiving data at address 0x%x for readbyte, called by %s: 0d%d", i, memoryAddress, called, code);}
-      else {Serial.printf("Error (%d of 3) receiving data at address 0x%x for readbyte: 0d%d", i, memoryAddress, code);}
+      if (called) {Serial.printf("Error (%d of 3) receiving data at address 0x%x for readbyte, called by %s: 0d%d\n", i, memoryAddress, called, code);}
+      else {Serial.printf("Error (%d of 3) receiving data at address 0x%x for readbyte: 0d%d\n", i, memoryAddress, code);}
     }
 
     if (code == 0) {return data;}
@@ -176,7 +184,7 @@ String EEPROM::readString(int length, int memoryAddress, bool checkTryAgain, boo
     // Обработка кода ошибки
     if (code != 0 && showError)
     {
-      Serial.printf("Error (%d of 3) receiving data at address 0x%x for readString(%d): 0d%d", i, memoryAddress, length, code);
+      Serial.printf("Error (%d of 3) receiving data at address 0x%x for readString(%d): 0d%d\n", i, memoryAddress, length, code);
     }
  
     if (code == 0) {return data;}
@@ -204,7 +212,7 @@ int EEPROM::updatebyte(int memoryAddress, byte data, bool checkTryAgain, bool sh
       if (code == 0 || code == -1) {i = 3;}
       else 
       {
-        Serial.printf("Error (%d of 3) writing data at address 0x%x for updatebyte(0x%x): 0d%d", i, memoryAddress, data, code);
+        Serial.printf("Error (%d of 3) writing data at address 0x%x for updatebyte(0x%x): 0d%d\n", i, memoryAddress, data, code);
       }
     }
     return code;
@@ -237,7 +245,7 @@ int EEPROM::updatebit(int memoryAddress, bool value, int bitNumber, bool checkTr
     if (code == 0 || code == -1) {i = 3;}
     if (code !=0  && showError)
     {
-      Serial.printf("Error (%d of 3) writing data at address 0x%x for updatebit(0x%x, %d): 0d%d", i, memoryAddress, data, bitNumber, code);
+      Serial.printf("Error (%d of 3) writing data at address 0x%x for updatebit(0x%x, %d): 0d%d\n", i, memoryAddress, data, bitNumber, code);
     }
   }
         
@@ -269,7 +277,7 @@ int EEPROM::updateString(int memoryAddress, String data, bool endString, bool ch
         if (code == 0) {y = 3;}                   // Выход из цикла повторных попыток
         else if (showError)
         {
-          Serial.printf("Error (%d of 3) writing data at address 0x%x for updateString(0x%x, %d): 0d%d", y, memoryAddress, data[i], i, code);
+          Serial.printf("Error (%d of 3) writing data at address 0x%x for updateString(0x%x, %d): 0d%d\n", y, memoryAddress, data[i], i, code);
           return code;
         }
       }
@@ -283,7 +291,7 @@ int EEPROM::updateString(int memoryAddress, String data, bool endString, bool ch
     if (code == 0) {return code;}
     else if (showError)
     {
-      Serial.printf("Error (%d of 3) writing endchar at address 0x%x for updatebit(0x00): 0d%d", y, memoryAddress + data.length(), code);
+      Serial.printf("Error (%d of 3) writing endchar at address 0x%x for updatebit(0x00): 0d%d\n", y, memoryAddress + data.length(), code);
     }
   }
 
@@ -424,25 +432,11 @@ void EEPROM::printmap(int start, int size, int sizeLine, bool printText, bool ch
   } 
 }
 
-int Keypad::_changePORT(byte data)
-{
-  Wire.beginTransmission(_address);
-  Wire.write(data);
-  return Wire.endTransmission(); 
-}
-
-byte Keypad::_changeAndGetBack(byte data)
-{
-  _changePORT(data);
-
-  // Получение значения порта
-  Wire.beginTransmission(_address);
-  Wire.requestFrom(_address, 1);
-  byte _newPORT = Wire.read();
-  Wire.endTransmission();
-  return _newPORT;
-}
-
+/** Клаватура подключаемая по IIC
+ * @param type - тип клавиатуры [4x4, 3x4, 1x4]
+ * @param address - адрес расширителя портов в IIC шине начинается с 0b0100XXX (для PCF8574) или 0b0111XXX (для PCF8574A)
+ * @param timeHold - время за которое можно считать кнопку не просто нажатой, а удержанной
+ */
 Keypad::Keypad(uint8_t address, uint8_t type, uint32_t timeHold)
 {
   // Сохранение (копирование) значений параметров клавиатуры
@@ -468,6 +462,34 @@ Keypad::Keypad(uint8_t address, uint8_t type, uint32_t timeHold)
   }
 }
 
+/** Изменение регистра порта
+ * @param data - новое значение регистра порта
+ * @return код окончания передачи, для получения ошибки (если нужно будет)
+ */
+int Keypad::_changePORT(byte data)
+{
+  Wire.beginTransmission(_address);
+  Wire.write(data);
+  return Wire.endTransmission(); 
+}
+
+/** Изменение регистра и получение нового значения порта PCF8574
+ * @param data - новое значение регистра порта
+ * @return байт порта после изменения его регистра
+ */
+byte Keypad::_changeAndGetBack(byte data)
+{
+  _changePORT(data);
+
+  // Получение значения порта
+  Wire.beginTransmission(_address);
+  Wire.requestFrom(_address, 1);
+  byte _newPORT = Wire.read();
+  Wire.endTransmission();
+  return _newPORT;
+}
+
+// Инициализация клавиатуры
 void Keypad::begin()
 {
   // Передача значения расширителю портов
@@ -479,10 +501,13 @@ void Keypad::begin()
   else {_status = false;}
 }
 
+/** Считывание клавиши
+ * @return true если нажата кнопка
+ */
 bool Keypad::read()
 {
   bool _forReturn = false;
-  byte _nowPORT;                                  //!Если объявить переменную (кроме переменных цикла) внутри switch, то дальше 1 условия он не двинется.
+  byte _nowPORT;                                  // !Если объявить переменную внутри switch, то дальше 1 условия он не двинется.
 
   // Сброс переменной состояния
   state = false;
@@ -558,88 +583,408 @@ bool Keypad::read()
     _forReturn = true;
   }
 
-  //Сохранение нажатой кнопки
+  // Сохранение нажатой кнопки
   _numbWas = _numbNow;
   return _forReturn;
 }
 
-Clock::Clock(int address, bool doRead)
+/** Часы подключаемые по шине I2C
+ * @param address - адресс устройства в шине I2C
+ * @param check - выполнение проверки подключения при инициализации, вне основного кода не сработает 
+ */
+Clock::Clock(int address, bool check)
 {
   _address = address;
-  if (doRead) 
-  {
-    Wire.begin();
-    Wire.beginTransmission(_address);
-    int code = Wire.endTransmission();
+  if (check) {begin();}
+}
 
-    if (code != 0) 
-    {
-      status = false;
-      wasError = true;
-    }
-    else 
-    {
-      status = true;
-      read(true, false);
-    }
+/** Перевод числа из 10 в 16 систему счисления и обратно
+ * @param numb - число
+ * @param toBCD - True из DEC в HEX, False из HEX в DEC
+ */
+int Clock::_transNumber(int numb, bool toBCD)
+{
+  if (toBCD) {return ((numb/10 * 16) + (numb % 10));}
+  else {return ((numb/16 * 10) + (numb % 16));}
+}
+
+/** Инициализация часов
+ * @return true - если небыло ошибки
+ */
+bool Clock::begin()
+{
+  Wire.begin();
+  Wire.beginTransmission(_address);
+  int code = Wire.endTransmission();
+
+  if (code != 0) 
+  {
+    status = false;
+  }
+  else 
+  {
+    status = true;
+    read();
   }
 }
 
+/** Считывание всех данных (кроме ОЗУ) часова
+ * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+ * @param showError - вывод ошибки
+ * @return true - если код окончания равен 0 (все хорошо)
+ */
 bool Clock::read(bool checkTryAgain, bool showError)
 {
-  byte temp;
+  byte temp[8];                                   // Временная переменная для хранения байта
+  int code;                                       // Переменная для хранения кода ошибки
+  wasError = false;
+ 
+  byte second;                                    // Секунды
+  byte minute;                                    // Минуты 
+  byte hour;                                      // Часы                                  
+  byte day;                                       // День месяца
+  byte month;                                     // Месяц  
+  int year;                                       // Год
+
+  for (int i = checkTryAgain?1:3; i <= 3; i++)    // Вначале отправляется адресс памяти (принцип похожий с обычной памятью), поэтому используется 2-й цикл
+  {
+    for (int y = checkTryAgain?1:3; y <= 3; y++)
+    {
+      Wire.beginTransmission(_address);
+      Wire.write(0x00);
+      code = Wire.endTransmission();
+      if (code != 1 && code != 2 && code != 3 && code != 4) {y = 4;}       // Wire.endTransmission() научился возвращать 8, хотя должен возвращить число [0, 4]
+      else if (showError) {Serial.printf("Error (%d,%d of 3) sending address 0x00 for getting data: 0d%d\n", i, y, code);}
+    }
+
+    Wire.requestFrom(_address, 8);
+    for (int y = 0; y < 8; y++) {temp[y] = Wire.read();}
+    code = Wire.endTransmission();
+
+    if (code == 1 || code == 2 || code == 3 || code == 4)
+    {
+      if (showError) {Serial.printf("Error (%d of 3) getting data: 0d%d\n", i, code);}
+      continue;
+    }
+
+    // Обработка нулевого байта. Содержит вкл./выкл. и секунды
+    working = temp[0] & 0b10000000;
+    second = _transNumber(temp[0] & 0b1111111, false);
+
+    // Первый байт - минуты.
+    minute = _transNumber(temp[1], false); 
+   
+    // Второй байт - часы и их режим
+    mode = temp[2] & 0b1000000;  
+    if (mode)
+    {
+      bool AM_PM = temp[2] & 0b100000;
+      hour = _transNumber(temp[2] & 0b11111, false) + AM_PM?12:0;
+    }
+    else
+    {
+      hour = _transNumber(temp[2] & 0b111111, false);
+    }
+
+    // Четвёрты байт - день (число)
+    day = _transNumber(temp[4] & 0b111111, false);
+
+    // Пятый байт - месяц
+    month = _transNumber(temp[5] & 0b11111, false);
+
+    // Шестой байт - год
+    year = _transNumber(temp[6], false) + 2000;
+
+    // Седьмой байт - параметры часов
+    OUT = temp[7] & 0b10000000;
+    SQWE = temp[7] & 0b10000;
+    quarts = temp[7] & 0b11;
+  }
+  if (code == 1 || code == 2 || code == 3 || code == 4)
+  {
+    wasError = true;
+    return false;
+  }
+  else
+  {
+    setTime(hour, minute, second, day, month, year);
+    return true;
+  }
+}
+
+/** Считывание ОЗУ часов
+ * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+ * @param showError - вывод ошибки
+ * @return строку из 64 символов
+ */
+String Clock::readRAM(bool checkTryAgain, bool showError)
+{
+  String temp;
   wasError = false;
 
   for (int i = checkTryAgain?1:3; i <= 3; i++)
   {
-    Wire.beginTransmission(_address);
-    Wire.requestFrom(_address, 8);
-
-    //Обработка нулевого байта. Содержит вкл./выкл. и секунды
-    temp = Wire.read();
-    working = temp & 0b10000000;
-    seconds = temp & 0b1111111;
-    Wire.endTransmission();
-
-    // Первый байт - минуты.
-    minutes = Wire.read();
-
-    // Второй байт - часы и их режим
-    temp = Wire.read();
-    mode = temp & 0b1000000;  
-    if (mode)
+    for (int y = checkTryAgain?1:3; y <= 3; y++)
     {
-      AM_PM = temp & 0b100000;
-      hours = temp * 0b11111;
-    }
-    else
-    {
-      AM_PM = false;
-      hours = temp * 0b111111;
+      Wire.beginTransmission(_address);           // Отправка адреса начала данных RAM
+      Wire.write(0x08);
+      int code = Wire.endTransmission();
+      if (code == 1 || code == 2 || code == 3 || code == 4)
+      {
+        wasError = true;
+        if (showError) {Serial.printf("Error (%d,%d of 3) sending address 0x08 for getting RAM data: 0d%d\n", i, y, code);}
+      }
+      else {y = 4;}
     }
 
-    // Третий байт - день недели
-    day = Wire.read() & 0b111;
+    temp = "";                                    // Сброс переменой temp
+    Wire.requestFrom(_address, 56);
 
-    // Четвёрты байт - день (число)
-    date = Wire.read() & 0b111111;
-
-    // Пятый байт - месяц
-    month = Wire.read() & 0b11111;
-
-    // Шестой байт - год
-    year = Wire.read();
-
-    // Седьмой байт - параметры часов
-    temp = Wire.read();
-    OUT = temp & 0b10000000;
-    SQWE = temp & 0b10000;
-    quarts = temp & 0b11;
+    while (Wire.available()) {temp += (char)Wire.read();}
 
     int code = Wire.endTransmission();
-    if (code == 0) {return true;}
+    if (code == 1 || code == 2 || code == 3 || code == 4)
+    {
+      wasError = true;
+      if (showError) {Serial.printf("Error (%d of 3) getting RAM data: 0d%d\n", i, code);}
+    }
+  }
+  return temp;
+}
+
+/**  Сихронизация часов
+ * @param http - ссылка на объект "клиента"
+ * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+ * @param showError - вывод ошибки
+ * @return true - если небыло ошибки
+ */
+bool Clock::sync(WiFiClient &http, bool checkTryAgain, bool showError)
+{
+  wasError = false;
+
+  byte second;                                    // Секунды
+  byte minute;                                    // Минуты 
+  byte hour;                                      // Часы                                  
+  byte day;                                       // День месяца
+  byte month;                                     // Месяц  
+  int year;                                       // Год
+
+  // Подключение к серверу
+  http.connect("worldtimeapi.org", 80);
+  http.println("GET /api/ip HTTP/1.1\r\nHost: worldtimeapi.org\r\nConnection: close\r\n\r\n");
+  delay(200);
+  if (!http.find("\r\n\r\n"))
+  {
+    wasError = true;
+    return false;
   }
 
-  wasError = true;
+  // От сервера приходит JSON файл, его необходимо предварительно обработать
+  const size_t capacity = JSON_OBJECT_SIZE(15) + 300;
+  DynamicJsonDocument temp(capacity);
+  DeserializationError error = deserializeJson(temp, http);
+  if (error)   
+  {
+    wasError = true;
+    return false;
+  }
+
+  String dateTime = temp["datetime"];
+
+  // Перенос полученных данных в переменне для удобства
+  second = dateTime.substring(17,19).toInt();
+  minute = dateTime.substring(14,16).toInt();
+  hour = dateTime.substring(11,13).toInt();
+  day = dateTime.substring(8,10).toInt();
+  month = dateTime.substring(5,8).toInt();
+  year = dateTime.substring(0,4).toInt();
+  setTime(hour, minute, second, day, month, year);
+
+  working = true;
+  write();
+
+  return true;
+}
+
+/** Проверка на попадание в диапазон временни
+ * @warning если часы сбиты, то пропускаем проверку
+ * @param sHours - часы первого диапазона
+ * @param sMin - минуты первого диапазона
+ * @param eHours - часы второго диапазона
+ * @param eMin - минуты второго диапазона
+ * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+ * @param showError - вывод ошибки
+ */
+bool Clock::compare(byte sHours, byte sMin, byte eHours, byte eMin, bool checkTryAgain, bool showError)
+{
+  int nTime = hour() * 100 + minute();
+  int sTime = sHours * 100 + sMin;
+  int eTime = eHours * 100 + eMin;
+
+  if(timeStatus() && WiFi.status() != WL_CONNECTED) {return true;}         // Если часы ненастроенны ... открываем дверь
+  else 
+  {
+    WiFiClient http;
+    if (!sync(http)) return true;
+  }
+
+  if(sTime < eTime)                               // Проверка на "ночную смену"
+  {
+    if(sTime <= nTime && eTime >= nTime) {return true;}
+  }
+  else if((sTime >= nTime) == (eTime >= nTime)) {return true;}
+
   return false;
+}
+
+/** Запись данных в RTC часы с внутренних часов
+ * @param numberByte - номер записываемого байта 
+ * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+ * @param showError - вывод ошибки
+ */
+bool Clock::write(byte numberByte, bool checkTryAgain, bool showError)
+{
+  byte temp;
+  int code;
+  wasError = false;
+
+  for (int i = checkTryAgain?1:3; i <= 3; i++)    
+  {
+    Wire.beginTransmission(_address);
+    if (numberByte == -1) {Wire.write(0x00);}     // Установка адресса начала записи
+    else {Wire.write(numberByte);}
+
+    switch (numberByte)
+    {
+    case 0:
+      Wire.write(working << 7 | _transNumber(second(), true));
+      break;
+    case 1:
+      Wire.write(_transNumber(minute(), true));
+      break;
+    case 2:
+      if (mode) 
+      {
+        temp |= 1 << 6;
+        temp |= (hour() / 12) << 5;
+        temp |= _transNumber(hour() % 12, true);
+      }
+      else {temp = _transNumber(hour(), true);}
+
+      Wire.write(_transNumber(temp, true));
+      break;
+    case 3:
+      Wire.write(0);
+      break;
+    case 4:
+      Wire.write(_transNumber(day(), true));
+      break;
+    case 5:
+      Wire.write(_transNumber(month(), false));
+      break;
+    case 6:
+      Wire.write(_transNumber(year() % 100, true));
+      break;
+    case 7:
+      Wire.write((OUT << 7) | (SQWE << 4) | quarts);
+      break;
+    
+    default:
+      break;
+    }
+
+    code = Wire.endTransmission();
+    if (code == 1 || code == 2 || code == 3 || code == 4)
+    {
+      if (showError) {Serial.printf("Error (%d of 3) writing data (0x%x): 0d%d\n", i, numberByte, code);}
+      continue;
+    }
+  }
+
+  if (code == 1 || code == 2 || code == 3 || code == 4)
+  {
+    wasError = true;
+    return false;
+  }
+  else {return true;}
+}
+
+/** Запись всех данных в RTC часы с внутренних часов
+ * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+ * @param showError - вывод ошибки
+ */
+bool Clock::write(bool checkTryAgain, bool showError)
+{
+  byte temp;
+  int code;
+  wasError = false;
+
+  for (int i = checkTryAgain?1:3; i <= 3; i++)    
+  {
+    Wire.beginTransmission(_address);
+    Wire.write(0x00);     // Установка адресса начала записи
+
+    Wire.write(working << 7 | _transNumber(second(), true));
+    Wire.write(_transNumber(minute(), true));
+    if (mode) 
+    {
+      temp |= 1 << 6;
+      temp |= (hour() / 12) << 5;
+      temp |= _transNumber(hour() % 12, true);
+    }
+    else {temp = _transNumber(hour(), true);}
+    Wire.write(_transNumber(temp, true));
+    Wire.write(0);
+    Wire.write(_transNumber(day(), true));
+    Wire.write(_transNumber(month(), false));
+    Wire.write(_transNumber(year() % 100, true));
+    Wire.write((OUT << 7) | (SQWE << 4) | quarts);
+
+    code = Wire.endTransmission();
+    if (code == 1 || code == 2 || code == 3 || code == 4)
+    {
+      if (showError) {Serial.printf("Error (%d of 3) writing data: 0d%d\n", i, code);}
+      continue;
+    }
+  }
+
+  if (code == 1 || code == 2 || code == 3 || code == 4)
+  {
+    wasError = true;
+    return false;
+  }
+  else {return true;}
+}
+
+/** Запись байта данных в RTC часы
+ * @param numberByte - номер записываемого байта 
+ * @param data - записываемый байт
+ * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+ * @param showError - вывод ошибки
+ */
+bool Clock::write(byte numberByte, byte data, bool checkTryAgain, bool showError)
+{
+  int code;
+  wasError = false;
+
+  for (int i = checkTryAgain?1:3; i <= 3; i++)    
+  {
+    Wire.beginTransmission(_address);
+    Wire.write(numberByte);                       // Установка адресса начала записи
+    Wire.write(data);
+
+    code = Wire.endTransmission();
+    if (code == 1 || code == 2 || code == 3 || code == 4)
+    {
+      if (showError) {Serial.printf("Error (%d of 3) writing data (0x%x, 0x%x): 0d%d\n", i, numberByte, data, code);}
+      continue;
+    }
+  }
+
+  if (code == 1 || code == 2 || code == 3 || code == 4)
+  {
+    wasError = true;
+    return false;
+  }
+  else {return true;}
 }

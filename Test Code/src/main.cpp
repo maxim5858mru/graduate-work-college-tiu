@@ -31,19 +31,17 @@ WiFiClient temp;
 // Функция, возвращающая количество свободного ОЗУ (RAM)
 int memoryFree()
 {
-   int freeValue;
-   if((int)__brkval == 0)
-      freeValue = ((int)&freeValue) - ((int)&__bss_end);
-   else
-      freeValue = ((int)&freeValue) - ((int)__brkval);
-   return freeValue;
+  int freeValue;
+  if((int)__brkval == 0) {freeValue = ((int)&freeValue) - ((int)&__bss_end);}
+  else {freeValue = ((int)&freeValue) - ((int)__brkval);}
+  return freeValue;
 }
 
 int serialReadInt(String say)
 {
-    Serial.println(say);
-    while(!Serial.available()) {}
-    return Serial.readString().toInt();
+  Serial.println(say);
+  while(!Serial.available()) {}
+  return Serial.readString().toInt();
 }
 
 void setup() 

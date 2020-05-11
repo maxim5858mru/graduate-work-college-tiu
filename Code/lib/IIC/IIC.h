@@ -3,6 +3,10 @@
 
 #include <Arduino.h>
 #include <Wire.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <ArduinoJson.h>
+#include <TimeLib.h>
 
 // Код ошибки для EEPROM
 #define ERROR_CODE      0xFF
@@ -219,51 +223,39 @@ private:
     // Адрес часов в шине I2C
     uint8_t _address;
 
-    /** Запись данных в часы
-     * @param numberByte - номер записываемого байта. Для записи всех байтов -1. 
-     * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
-     * @param showError - вывод ошибки
+    /** Перевод числа из 10 в 16 систему счисления и обратно
+     * @param numb - число
+     * @param toBCD - True из DEC в HEX, False из HEX в DEC
      */
-    bool _write(int numberByte = -1, bool checkTryAgain = true, bool showError = false);
-public:
-    // Секунды
-    byte seconds;
-    // Минуты
-    byte minutes;
-    // Часы
-    byte hours;
-    // AM или PM. Для 12 часового режима. True - AM, False - PM
-    bool AM_PM = false;
-    // День недели. Понедельник - 1, воскресенье - 0
-    byte day;
-    // День месяца
-    byte date;
-    // Месяц 
-    byte month;
-    // Год
-    int year;
+    int _transNumber(int numb, bool toBCD);
 
+public:
     // Вкл./ Выкл.
-    bool working;
+    bool working = false;
     // Статус инциализации 
     bool status = false;
     // Флаг отображающий была ли ошибка
     bool wasError = false;
 
     // Вывод прямоугольного сигнала для реализации прерывания
-    bool SQWE;
+    bool SQWE = false;
     // Выводимый сигнал на случай отключения SQWE
-    bool OUT;
+    bool OUT = false;
     // Кварцевый резонатор
-    byte quarts;
+    byte quarts = 0b11;
     // 24-часовой режим. True - 12 часовой режим, False - 24
-    bool mode;
+    bool mode = false;
 
     /** Часы подключаемые по шине I2C
      * @param address - адресс устройства в шине I2C
-     * @param doRead - выполнение считывания текущих значений при инициализации 
+     * @param check - выполнение проверки подключения при инициализации, вне основного кода не сработает 
      */
-    Clock(int address = 0b110100, bool doRead = false);
+    Clock(int address = 0b110100, bool check = false);
+
+    /** Инициализация часов
+     * @return true - если небыло ошибки
+     */
+    bool begin();
 
     /** Считывание всех данных (кроме ОЗУ) часова
      * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
@@ -271,30 +263,49 @@ public:
      * @return true - если код окончания равен 0 (все хорошо)
      */
     bool read(bool checkTryAgain = true, bool showError = false);
+    /** Считывание ОЗУ часов
+     * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+     * @param showError - вывод ошибки
+     * @return строку из 64 символов
+     */
+    String readRAM(bool checkTryAgain = true, bool showError = false);
+
+    /** Сихронизация часов
+     * @param http - ссылка на объект "клиента"
+     * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+     * @param showError - вывод ошибки
+     * @return true - если небыло ошибки
+     */
+    bool sync(WiFiClient &http, bool checkTryAgain = true, bool showError = false);
+    /** Проверка на попадание в диапазон временни
+     * @warning если часы сбиты, то пропускаем проверку
+     * @param sHours - часы первого диапазона
+     * @param sMin - минуты первого диапазона
+     * @param eHours - часы второго диапазона
+     * @param eMin - минуты второго диапазона
+     * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+     * @param showError - вывод ошибки
+     */
+    bool compare(byte sHours, byte sMin, byte eHours, byte eMin, bool checkTryAgain = true, bool showError = false);
 
     /** Запись данных в часы
+     * @param numberByte - номер записываемого байта. Для записи всех байтов -1. 
      * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
      * @param showError - вывод ошибки
      * @return true - если код окончания равен 0 (все хорошо)
      */
+    bool write(byte numberByte, bool checkTryAgain = true, bool showError = false);
+    /** Запись байта данных в RTC часы
+     * @param numberByte - номер записываемого байта 
+     * @param data - записываемый байт
+     * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+     * @param showError - вывод ошибки
+     */
+    bool write(byte numberByte, byte data, bool checkTryAgain = true, bool showError = false);
+    /** Запись всех данных в RTC часы с внутренних часов
+     * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+     * @param showError - вывод ошибки
+     */
     bool write(bool checkTryAgain = true, bool showError = false);
-    bool wrSec(byte wSeconds, bool checkTryAgain = true, bool showError = false);
-    bool wrMin(byte wMinutes, bool checkTryAgain = true, bool showError = false);
-    bool wrHours(byte wHours, bool wMode, bool AMorPM, bool checkTryAgain = true, bool showError = false);
-    bool wrDay(byte wDay, bool checkTryAgain = true, bool showError = false);
-    bool wrDate(byte wDate, bool checkTryAgain = true, bool showError = false);
-    bool wrMonth(byte wMonth, bool checkTryAgain = true, bool showError = false);
-    bool wrYear(int wYear, bool checkTryAgain = true, bool showError = false);
-    bool wrSet(bool wSQWE, bool wOUT, byte wQuarts, bool checkTryAgain = true, bool showError = false);
-
-    bool wrMin(bool checkTryAgain = true, bool showError = false);
-    bool wrHours(bool checkTryAgain = true, bool showError = false);
-    bool wrDay(bool checkTryAgain = true, bool showError = false);
-    bool wrDate(bool checkTryAgain = true, bool showError = false);
-    bool wrMonth(bool checkTryAgain = true, bool showError = false);
-    bool wrYear(bool checkTryAgain = true, bool showError = false);
-    bool wrSet(bool checkTryAgain = true, bool showError = false);
-
-    //!!! Считывание всего. Запись всего, по отдельности. Создание объекта TimeLib. Сихроннизация. Прерывания
 };
 #endif

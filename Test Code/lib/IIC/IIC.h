@@ -225,28 +225,11 @@ private:
 
     /** Перевод числа из 10 в 16 систему счисления и обратно
      * @param numb - число
-     * @param toHEX - True из DEC в HEX, False из HEX в DEC
+     * @param toBCD - True из DEC в HEX, False из HEX в DEC
      */
-    int _transNumber(int numb, bool toHEX);
+    int _transNumber(int numb, bool toBCD);
 
 public:
-    // Секунды 
-    byte seconds;                                   
-    // Минуты 
-    byte minutes;                                   
-    // Часы 
-    byte hours;                                     
-    // AM или PM. Для 12 часового режима. True - PM, False - AM
-    bool AM_PM;
-    // День недели. Понедельник - 1, воскресенье - 0 
-    byte weekday;                                   
-    // День месяца 
-    byte day;                                       
-    // Месяц  
-    byte month;                                     
-    // Год 
-    int year;                                       
-
     // Вкл./ Выкл.
     bool working = false;
     // Статус инциализации 
@@ -255,13 +238,13 @@ public:
     bool wasError = false;
 
     // Вывод прямоугольного сигнала для реализации прерывания
-    bool SQWE;
+    bool SQWE = false;
     // Выводимый сигнал на случай отключения SQWE
-    bool OUT;
+    bool OUT = false;
     // Кварцевый резонатор
-    byte quarts;
+    byte quarts = 0b11;
     // 24-часовой режим. True - 12 часовой режим, False - 24
-    bool mode;
+    bool mode = false;
 
     /** Часы подключаемые по шине I2C
      * @param address - адресс устройства в шине I2C
@@ -287,16 +270,6 @@ public:
      */
     String readRAM(bool checkTryAgain = true, bool showError = false);
 
-    /** Включение часов
-     * @param showError - вывод ошибки
-     * @return true - если код окончания равен 0 (все хорошо)
-     */
-    bool turnON(bool checkTryAgain = true, bool showError = false);
-    /** Выключение часов
-     * @param showError - вывод ошибки
-     * @return true - если код окончания равен 0 (все хорошо)
-     */
-    bool turnOFF(bool checkTryAgain = true, bool showError = false);
     /** Сихронизация часов
      * @param http - ссылка на объект "клиента"
      * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
@@ -322,5 +295,17 @@ public:
      * @return true - если код окончания равен 0 (все хорошо)
      */
     bool write(byte numberByte, bool checkTryAgain = true, bool showError = false);
+    /** Запись байта данных в RTC часы
+     * @param numberByte - номер записываемого байта 
+     * @param data - записываемый байт
+     * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+     * @param showError - вывод ошибки
+     */
+    bool write(byte numberByte, byte data, bool checkTryAgain = true, bool showError = false);
+    /** Запись всех данных в RTC часы с внутренних часов
+     * @param checkTryAgain - повторная попытка чтения и записи (x3) в случае неудачи
+     * @param showError - вывод ошибки
+     */
+    bool write(bool checkTryAgain = true, bool showError = false);
 };
 #endif
