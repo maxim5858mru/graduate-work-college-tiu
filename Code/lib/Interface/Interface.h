@@ -5,7 +5,6 @@
 #include <SD.h>
 #include <ArduinoJson.h>
 #include <Adafruit_Fingerprint.h>
-#include <DS1307RTC.h>
 #include <LiquidCrystal_I2C.h>
 #include <MFRC522.h>
 #include "../IIC/IIC.h"
@@ -51,13 +50,5 @@ namespace Interface
    * @return !!!!!Учитывая что открытие двери просходит внутри функции, для чего возратное значение не знаю
    */
   bool checkAndGetRFID();
-
-  /** Проверка на попадание в диапазон временни
-   * @warning если часы сбиты, то пропускаем проверку
-   * @param sTime - начальное время
-   * @param eTime - конечное время
-   * @return истина если текущее время подходит под диапазон
-   */
-  bool checkTime(int sTime, int eTime);
 }
 #endif

@@ -2,7 +2,6 @@
 #include <SD.h>
 #include <ArduinoJson.h>
 #include <Adafruit_Fingerprint.h>
-#include <DS1307RTC.h>
 #include <LiquidCrystal_I2C.h>
 #include <MFRC522.h>
 #include "../IIC/IIC.h"
@@ -11,7 +10,7 @@
 
 extern LiquidCrystal_I2C lcd;
 extern MFRC522 rfid;
-// extern tmElements_t nowTime;
+extern Clock RTC;
 
 /** Измерение растояния до объекта, с помощью ультразвукового датчика
  * @warning желательно чтобы объект меньше поглощал звуков
@@ -183,11 +182,19 @@ bool Interface::checkAndGetRFID()
       if (!result) {continue;}                    // Костыль для реализации break label цикла перебора
 
       //  Проверка на время, но тут в случае ошибки accessDeny
-      // if (!checkTime(json["Start Time"], json["End Time"])) 
-      // {
-      //   accessDeny(true);
-      //   return false;
-      // }
+      int sMin = json["Start Time"];
+      sMin %= 100;
+      int sHour = json["Start Time"];
+      sHour /= 100;
+      int eMin = json["End Time"];
+      eMin %= 100;
+      int eHour = json["End Time"];
+      eHour /= 100;
+      if (!RTC.compare(sHour, sMin, eHour, eMin)) 
+      {
+        accessDeny(true);
+        return false;
+      }
 
       // !!!!! Проверка на доп. требования
       // !!!!! .. .. ..
@@ -199,29 +206,5 @@ bool Interface::checkAndGetRFID()
   }
 
   accessDeny(false);
-  return false;
-}
-
-/** Проверка на попадание в диапазон временни
- * @param !!!!! Нужно добавить сихронизацию времени
- * @warning если часы сбиты, то пропускаем проверку
- * @param sTime - начальное время
- * @param eTime - конечное время
- * @return истина если текущее время подходит под диапазон
- */
-bool Interface::checkTime(int sTime, int eTime)
-{
-  int nTime;
-  tmElements_t nowTime;                                
-
-  // if(!RTC.read(nowTime)) {return true;}            // Если часы ненастроенны ... открываем дверь
-  nTime = nowTime.Hour * 100 + nowTime.Minute;        // Переводим время в удобный формат
-
-  if(sTime < eTime)                             // Проверка на "ночную смену"
-  {
-    if(sTime <= nTime && eTime >= nTime) {return true;}
-  }
-  else if((sTime >= nTime) == (eTime >= nTime)) {return true;}
-
   return false;
 }

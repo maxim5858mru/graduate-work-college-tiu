@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <SD.h>
+#include <WiFiClient.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
 #include <ArduinoJson.h>
@@ -9,9 +10,6 @@
 #include "../lib/Network/Network.h"
 #include "../lib/Routing/Routing.h"
 #include "../lib/Interface/Interface.h"
-
-// Адрес памяти в шине IIC
-#define EEPROM_ADDRESS 0b1010000
 
 // Адреса памяти
 #define EEPROM_ADDRESS_MDNS 385
@@ -43,17 +41,19 @@ bool flags[2] = {
 
 String host;
 
-EEPROM memory(EEPROM_ADDRESS, 10000);
-Keypad keypad(0x21, KB4x4);
+EEPROM memory(0x50, 10000);
+Keypad keypad(0x20, KB4x4);
+Clock RTC(0x68, false);
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 MFRC522 rfid(14, 2);
 Timer timer;
 AsyncWebServer server(80);
+WiFiClient http;
 
 void setup()
 {
   // Инициализция обязательных компонентов
-  memory.begin(EEPROM_ADDRESS);
+  memory.begin(0x50);
   SPI.begin();  // Для сканера меток
   rfid.PCD_Init(); 
   lcd.init();
@@ -71,6 +71,10 @@ void setup()
   // Настройка Wi-Fi
   if (memory.status) {Network::setupWiFi();}
   else {Network::presetupWiFi();}                                          // Создание точки доступа с предустановленными значениями
+
+  // // Сихронизация часов
+  RTC.begin();
+  RTC.sync(http);
 
   // Настройка Web сервера
   if (SDWorking && WiFi.status() == WL_CONNECTED) 
