@@ -28,7 +28,7 @@ DItemRevisionGUID=
 ReportSuppressedErrorsInMessages=0
 FSMCodingStyle=eFMSDropDownList_OneProcess
 FSMEncodingStyle=eFMSDropDownList_OneHot
-OutputPath=
+OutputPath=Project Outputs for Graduate Work
 LogFolderPath=
 ManagedProjectGUID=
 IncludeDesignInRelease=0
@@ -173,47 +173,35 @@ DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.GBL
 DItemRevisionGUID=
 
 [GeneratedDocument5]
-DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.GBO
-DItemRevisionGUID=
-
-[GeneratedDocument6]
-DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.GBS
-DItemRevisionGUID=
-
-[GeneratedDocument7]
-DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.GKO
-DItemRevisionGUID=
-
-[GeneratedDocument8]
 DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.GM4
 DItemRevisionGUID=
 
-[GeneratedDocument9]
+[GeneratedDocument6]
 DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.GTL
 DItemRevisionGUID=
 
-[GeneratedDocument10]
-DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.GTO
-DItemRevisionGUID=
-
-[GeneratedDocument11]
-DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.GTS
-DItemRevisionGUID=
-
-[GeneratedDocument12]
+[GeneratedDocument7]
 DocumentPath=Project Outputs for Graduate Work\NC Drill\PCB.LDP
 DItemRevisionGUID=
 
-[GeneratedDocument13]
+[GeneratedDocument8]
+DocumentPath=Документация\PCB.PcbDoc.pdf
+DItemRevisionGUID=
+
+[GeneratedDocument9]
 DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.REP
 DItemRevisionGUID=
 
-[GeneratedDocument14]
+[GeneratedDocument10]
 DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.RUL
 DItemRevisionGUID=
 
-[GeneratedDocument15]
+[GeneratedDocument11]
 DocumentPath=Project Outputs for Graduate Work\NC Drill\PCB.TXT
+DItemRevisionGUID=
+
+[GeneratedDocument12]
+DocumentPath=Документация\ПРИЛОЖЕНИЕ Б.pdf
 DItemRevisionGUID=
 
 [Parameter1]
@@ -331,7 +319,7 @@ ContentTypeGUID=CB6F2064-E317-11DF-B822-12313F0024A2
 ConfigurationType=Source
 
 [Generic_EDE]
-OutputDir=
+OutputDir=Project Outputs for Graduate Work
 
 [OutputGroup1]
 Name=Netlist Outputs
