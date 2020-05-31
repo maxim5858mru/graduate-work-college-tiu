@@ -185,23 +185,15 @@ DocumentPath=Project Outputs for Graduate Work\NC Drill\PCB.LDP
 DItemRevisionGUID=
 
 [GeneratedDocument8]
-DocumentPath=Документация\PCB.PcbDoc.pdf
-DItemRevisionGUID=
-
-[GeneratedDocument9]
 DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.REP
 DItemRevisionGUID=
 
-[GeneratedDocument10]
+[GeneratedDocument9]
 DocumentPath=Project Outputs for Graduate Work\Gerber\PCB.RUL
 DItemRevisionGUID=
 
-[GeneratedDocument11]
+[GeneratedDocument10]
 DocumentPath=Project Outputs for Graduate Work\NC Drill\PCB.TXT
-DItemRevisionGUID=
-
-[GeneratedDocument12]
-DocumentPath=Документация\ПРИЛОЖЕНИЕ Б.pdf
 DItemRevisionGUID=
 
 [Parameter1]
@@ -430,7 +422,7 @@ OutputDefault20=0
 [OutputGroup2]
 Name=Simulator Outputs
 Description=
-TargetPrinter=Canon PIXMA TS8040
+TargetPrinter=Microsoft Print to PDF
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 
 [OutputGroup3]
