@@ -155,7 +155,7 @@ Configuration6_Item15=CArc=Full|CFill=Full|Comment=Full|Coordinate=Full|CPad=Ful
 PcbPrintPreferences6=
 
 [PublishSettings]
-OutputFilePath2=Project Outputs for Free Documents\.PDF
+OutputFilePath2=C:\Users\maxim\OneDrive\Документы\Диплом\graduate-work\Altium Designer Project\Project Outputs for Graduate Work\Job.PDF
 ReleaseManaged2=1
 OutputBasePath2=Project Outputs for Graduate Work
 OutputPathMedia2=
@@ -234,7 +234,7 @@ WmvVideoCodecName4=Windows Media Video V7
 WmvQuality4=80
 
 [GeneratedFilesSettings]
-RelativeOutputPath2=Project Outputs for Free Documents\.PDF
+RelativeOutputPath2=C:\Users\maxim\OneDrive\Документы\Диплом\graduate-work\Altium Designer Project\Project Outputs for Graduate Work\Job.PDF
 OpenOutputs2=1
 RelativeOutputPath3=C:\Users\maxim\OneDrive\Документы\Диплом\graduate-work\Altium Designer Project\Project Outputs for Graduate Work\
 OpenOutputs3=1
