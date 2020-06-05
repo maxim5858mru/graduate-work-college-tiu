@@ -31,19 +31,14 @@
 #define SDWorking flags[0]
 #define MDSNWorking flags[1]
 
-// Выводы МК, к которым подключены реле, кнопки и пьезодинамик
-#define RELE0_PIN   26
-#define RELE1_PIN   25
-#define BUTTON0_PIN 13
-#define BUTTON1_PIN 12
-#define TONE_PIN    27
-
 // Параметры загружаемые с EEPROM
 bool settings[8] = {
   true,                                           // UART интерфейс
   true,                                           // Динамик
   true,                                           // Точка доступа
-  true                                            // Вывод ошибок через UART
+  true,                                           // Вывод ошибок через UART
+  true,                                           // Дверь №1
+  true                                            // Дверь №2
 };
 
 // Флаги состояния
@@ -63,51 +58,124 @@ AsyncWebServer server(80);                        // Веб сервер
 Timer timer;                                      // Таймер
 WiFiClient http;                                  // Клиент для различных обращений к другим серверам
 
-void open()                                       // Прерывание на открытие двери при нажатии кнопки
-{
-  ESP.restart();                                  //!!!!! Чтобы написать нормальное прерывание необходимо отключить Watchdog для Arduino Core в ESP-IDF
+void open() {                                     // Прерывание на открытие двери при нажатии кнопки
+  ESP.restart();
 }
+
+/** Вывод процентов
+ * @param cent - процент загрузки
+ */
+void writeLoadCent(int cent) {
+  if (cent < 100) {
+    lcd.setCursor(9, 0);
+  } else {
+    lcd.setCursor(8,0);
+  }
+  lcd.print((String)cent);
+}
+
 
 void setup()
 {
-  // Инициализция обязательных компонентов
-  memory.begin(IIC_EEPROM);
-  SPI.begin();  // Для сканера меток
-  rfid.PCD_Init(); 
+  /* 1 этап - Инициализция обязательных компонентов */
+  // Подготовка дисплея
   lcd.init();
+  lcd.clear();
+  lcd.backlight();
+  lcd.setCursor(0,0);
+  lcd.print("Loading   0%");
+  lcd.setCursor(0, 1);
+  lcd.print("Status:  ///////");
+
+  // Инициализация обязательных компонентов
+  memory.begin(IIC_EEPROM);
+  SPI.begin();
+  rfid.PCD_Init(); 
   keypad.begin();
+  writeLoadCent(20);
 
-  // Получение настроек с памяти
-  if (memory.status) for (int i = 0; i < 8; i++) {settings[i] = memory.readbit(i, 0);}
+  // Инициализация дополнительных компонентов
+  // Считывание параметров
+  if (memory.status) for (int i = 0; i < 8; i++) {
+    settings[i] = memory.readbit(i, 0);
+  }
+  if (NeedSerial) {                               // UART
+    Serial.begin(115200);
+  }  
+  writeLoadCent(25);
+  ledcSetup(0, 1000, 8);                          // Динамик                          
+  if (Buzzer) {
+    ledcWrite(0, 200);
+  } else {
+    ledcWrite(0, 0);
+  }  
+  writeLoadCent(27);  
 
-  // Инициализация компонентов
-  if (NeedSerial) {Serial.begin(115200);}         // UART
-  ledcSetup(0, 1000, 8);                          // Настройка ШИМ для пьезодинамика
-  if (Buzzer) {ledcWrite(0, 200);}
-  else {ledcWrite(0, 0);}            
-  if (SD.begin() && SD.cardType() != CARD_NONE && SD.cardType() != CARD_UNKNOWN) {SDWorking = true;}// Монтирование файловой системы
-  else if (ShowError) {Serial.println("Error mounting SD");}
+  // Монтирование файловой системы
+  lcd.setCursor(9, 1);
+  if (SD.begin() && SD.cardType() != CARD_NONE && SD.cardType() != CARD_UNKNOWN) {                  
+    SDWorking = true;
+    lcd.print("+");
+  } else if (ShowError) {
+    Serial.println("Error mounting SD");
+    lcd.print("-");
+  }
+  writeLoadCent(30);
 
-  /*!!!!! Временно !!!!!*/
-  /* Псевдо-прерывание */
-  pinMode(BUTTON0_PIN, INPUT);                                             // Настройка выводов МК для прерывания
-  // pinMode(BUTTON1_PIN, INPUT);
-  pinMode(RELE0_PIN, OUTPUT);
-  pinMode(RELE1_PIN, OUTPUT);
-  digitalWrite(RELE0_PIN, HIGH);
-  digitalWrite(RELE1_PIN, HIGH);
-  if (digitalRead(BUTTON0_PIN) == LOW) {Interface::open(0);}               // Псевдо-проверка
-  // else if (digitalRead(BUTTON1_PIN) == LOW) {Interface::open(1);}
-  attachInterrupt(digitalPinToInterrupt(BUTTON0_PIN), open, FALLING);
-  // attachInterrupt(digitalPinToInterrupt(BUTTON1_PIN), open, FALLING);
+  // Проверка компонентов
+  
 
-  // Настройка Wi-Fi
-  if (memory.status) {Network::setupWiFi();}
-  else {Network::presetupWiFi();}                                          // Создание точки доступа с предустановленными значениями
+  writeLoadCent(50);
 
+  // /* 2 этап - Псевдо-прерывание */
+  //   int pins[2][2] = {
+  //   {26, 25},                                     // 0 строка - реле
+  //   {13, 12}                                      // 1 строка - кнопки
+  // };                     
+
+  // if (memory.status) for (int i = 1; i <= 2; i++) {
+  //   settings[i + 3] = memory.readbit(i + 3, 0);
+  //   if (settings[i + 3]) {
+  //     pinMode(pins[1][i], INPUT);                 // Настройка входа для кнопки
+  //     pinMode(pins[0][i], OUTPUT);                // Настройка сигнала для реле
+  //     digitalWrite(pins[0][i], HIGH);
+  //     attachInterrupt(digitalPinToInterrupt(pins[1][i]), open, FALLING); // Добавление прерывания
+  //   }
+  // }
+
+  // // Псевдо-проверка
+  // if (digitalRead(pins[1][0]) == LOW) {
+  //   Interface::open(0);
+  // } else if (digitalRead(pins[1][1]) == LOW) {
+  //   Interface::open(1);
+  // }
+ 
+  writeLoadCent(60);
+
+  /* 3 этап - Настройка Wi-Fi */
+  if (memory.status) {
+    Network::setupWiFi();
+  } else {
+    Network::presetupWiFi();                      // Создание точки доступа с предустановленными значениями
+  }            
+  lcd.setCursor(14, 1);
+  if (WiFi.isConnected()) {
+    lcd.print("+");
+  } else {
+    lcd.print("-");
+  }              
+  writeLoadCent(70);
+
+  /* 4 этап - Web-сервер */
   // Сихронизация часов
-  RTC.begin();
+  lcd.setCursor(15, 1);
+  if (RTC.begin()) {
+    lcd.print("+");
+  } else {
+    lcd.print("-");
+  }
   RTC.sync(http);
+  writeLoadCent(72);
 
   // Настройка Web сервера
   if (SDWorking && WiFi.status() == WL_CONNECTED) 
@@ -117,16 +185,18 @@ void setup()
       host = memory.readString(EEPROM_SIZE_MDNS, EEPROM_ADDRESS_MDNS);
       if (!host.isEmpty() && MDNS.begin(host.c_str())) 
       {
-        if (NeedSerial) {Serial.println("MDNS включён, локальный адресс: http://" + String(host) + ".local/");}
+        if (NeedSerial) {
+          Serial.println("MDNS включён, локальный адресс: http://" + String(host) + ".local/");
+        }
         MDSNWorking = true;
       }
     }
+    writeLoadCent(75);
 
     // Настройка маршрутизации сервера
-
     // HTML
     server.onNotFound(handleNotFound);
-    server.on("/", HTTP_GET, handleNotFound);                 
+    server.on("/", HTTP_GET, handleNotFound);  
 
     // JS & CSS
     server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -146,20 +216,27 @@ void setup()
     server.on("/FontAwsome/fa-solid-900.svg", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send(SD, "/FontAwsome/fa-solid-900.svg", "image/svg+xml");
     });
+    writeLoadCent(85);
 
+    // Включение сервера
     server.begin();
-    if (MDSNWorking) {MDNS.addService("http", "tcp", 80);}
+    if (MDSNWorking) {
+      MDNS.addService("http", "tcp", 80);
+    }
+    writeLoadCent(90);
 
-    // Обновление по сети
-    ArduinoOTA.onStart([]                                                           
-    {
+    // Настройа перрывания для обновления по сети
+    ArduinoOTA.onStart([]{
       String type;
       if (ArduinoOTA.getCommand() == U_FLASH) {type = "sketch";}
       else {type = "filesystem";}
     });
     ArduinoOTA.begin();
   }
+  writeLoadCent(100);
+  delay(500);
 
+  // Сбрс дисплея
   lcd.noBacklight();
   Interface::goHome();
 }
@@ -175,7 +252,7 @@ void loop()
     if (Interface::getDistance(15, 4) < 60) 
     {
       timer.timerCheckAndStop();
-      timer.timerStart(10);
+      timer.timerStart(30);
     }
     
     lcd.backlight();
