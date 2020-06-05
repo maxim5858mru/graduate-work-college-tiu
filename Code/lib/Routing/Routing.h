@@ -5,8 +5,7 @@
 #include <SD.h>
 #include <ESPAsyncWebServer.h>
 
-//Маршрутизация
-
+// Маршрутизация
 void handleNotFound(AsyncWebServerRequest *request);
 
 #endif
