@@ -247,6 +247,10 @@ DItemRevisionGUID=
 DocumentPath=Project Outputs for Graduate Work\NC Drill\PCB.TXT
 DItemRevisionGUID=
 
+[GeneratedDocument11]
+DocumentPath=Документация\ПРИЛОЖЕНИЕ Б.pdf
+DItemRevisionGUID=
+
 [Parameter1]
 Name=Дата изменения
 Value=
