@@ -11,3 +11,7 @@ Altium Designer Project/Library/History
 Altium Designer Project/Project Logs for Graduate Work
 Altium Designer Project/Project Outputs for Graduate Work/Gerber/__Previews
 Altium Designer Project/Project Outputs for Graduate Work/NC Drill/__Previews
+Server/.vscode
+Server/bin
+Server/lib
+Server/WebServer/__pycache__

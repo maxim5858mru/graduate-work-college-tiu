@@ -17,7 +17,7 @@ public:
      * @param password - пароль для включения сканера отпечатков пальцев
      */
     FingerPrint(HardwareSerial* _Serial, uint32_t password = 0x00) : Adafruit_Fingerprint(_Serial, password) {};
-    // FingerPrint(SoftwareSerial* _Serial, uint32_t password = 0x00) : Adafruit_Fingerprint(_Serial, password) {};
+    FingerPrint(SoftwareSerial* _Serial, uint32_t password = 0x00) : Adafruit_Fingerprint(_Serial, password) {};
 
     /** Инициализация сканера отпечатков пальцев
      * @param baud - скорость обмена

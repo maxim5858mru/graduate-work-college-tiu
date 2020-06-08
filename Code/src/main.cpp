@@ -44,122 +44,49 @@ String host;
 EEPROM memory(0x50, 10000);                       // Память
 Keypad keypad(0x20, KB4x4);                       // Клавиатура
 RFID rfid(14, 2);	                              // Считыватель RFID карт
+FingerPrint fingerprint(&Serial2);				  // Сканер отпечатков пальцев
 Clock RTC(0x68, false);                           // RTC часы
 Timer timer;                                      // Таймер
 LiquidCrystal_I2C lcd(0x27, 16, 2);               // Дисплей
 AsyncWebServer server(80);                        // Веб сервер
 WiFiClient http;                                  // Клиент для различных обращений к другим серверам
 
-void open() {                                     // Прерывание на открытие двери при нажатии кнопки
-	ESP.restart();
-}
-
 void setup()
 {
 	/* 1 этап - Инициализация обязательных компонентов */
-	// Подготовка дисплея
-	lcd.init();
-	lcd.clear();
-	lcd.backlight();
-	lcd.setCursor(0,0);
-	lcd.print("Loading   0%");
-	lcd.setCursor(0, 1);
-	lcd.print("Status:  ///////");
+	lcdInit();
+	componentsInit();
 
-	// Инициализация обязательных компонентов
-	memory.begin(0x50);
-	SPI.begin();
-	rfid.PCD_Init(); 
-	keypad.begin();
-	writeLoadCent(20);
-
-	// Инициализация дополнительных компонентов
-	// Считывание параметров
-	if (memory.status) for (int i = 0; i < 8; i++) {
-		settings[i] = memory.readbit(i, 0);
-	}
-	if (NeedSerial) {                             // UART
-		Serial.begin(115200);
-	}  
-	writeLoadCent(25);
-	ledcSetup(0, 1000, 8);                        // Динамик                          
-	if (Buzzer) {
-		ledcWrite(0, 200);
-	} 
-	else {
-		ledcWrite(0, 0);
-	}  
-	writeLoadCent(27);  
-
-	// Монтирование файловой системы
-	lcd.setCursor(9, 1);
-	if (SD.begin() && SD.cardType() != CARD_NONE && SD.cardType() != CARD_UNKNOWN) {                  
-		SDWorking = true;
-		lcd.print("+");
-	} 
-	else if (ShowError) {
-		Serial.println("Error mounting SD");
-		lcd.print("-");
-	}
-	writeLoadCent(30);
-
-	// Проверка компонентов
-	
-
-	writeLoadCent(50);
-
-	// /* 2 этап - Псевдо-прерывание */
-	//   int pins[2][2] = {
-	//   {26, 25},                                   // 0 строка - реле
-	//   {13, 12}                                    // 1 строка - кнопки
-	// };                     
-
-	// if (memory.status) for (int i = 1; i <= 2; i++) {
-	//   settings[i + 3] = memory.readbit(i + 3, 0);
-	//   if (settings[i + 3]) {
-	//     pinMode(pins[1][i], INPUT);               // Настройка входа для кнопки
-	//     pinMode(pins[0][i], OUTPUT);              // Настройка сигнала для реле
-	//     digitalWrite(pins[0][i], HIGH);
-	//     attachInterrupt(digitalPinToInterrupt(pins[1][i]), open, FALLING); // Добавление прерывания
-	//   }
-	// }
-
-	// // Псевдо-проверка
-	// if (digitalRead(pins[1][0]) == LOW) {
-	//   Interface::open(0);
-	// } 
-	// else if (digitalRead(pins[1][1]) == LOW) {
-	//   Interface::open(1);
-	// }
- 
-	writeLoadCent(60);
+	/* 2 этап - Псевдо-прерывание */
+	// setInterrupt();
+ 	writeLoadCent(60);
 
 	/* 3 этап - Настройка Wi-Fi */
 	if (memory.status) {
 		Network::setupWiFi();
+		if (WiFi.isConnected()) {
+			setLoadFlag(6, "+");
+		} 
+		else {
+			setLoadFlag(6, "-");
+		}     
 	} 
 	else {
 		Network::presetupWiFi();                  // Создание точки доступа с предустановленными значениями
+		setLoadFlag(6, "+");
 	}            
-	lcd.setCursor(14, 1);
-	if (WiFi.isConnected()) {
-		lcd.print("+");
-	} 
-	else {
-		lcd.print("-");
-	}              
 	writeLoadCent(70);
 
 	/* 4 этап - Web-сервер */
-	// Синхронизация часов
-	lcd.setCursor(15, 1);
-	if (RTC.begin()) {
-		lcd.print("+");
+	if (RTC.begin()) {							  // Инициализация часов
+		setLoadFlag(5, "+");
 	} 
 	else {
-		lcd.print("-");
+		setLoadFlag(5, "-");
 	}
-	RTC.sync(http);
+	if (WiFi.isConnected()) {					  // Синхронизация часов
+		RTC.sync(http);
+	}
 	writeLoadCent(72);
 
 	// Настройка Web сервера

@@ -65,10 +65,10 @@ void Keypad::begin()
 
     // По результату окончания передачи можно сделать вывод о работе микросхемы
     if (code == 0) {
-        _status = true;
+        status = true;
     }
     else {
-        _status = false;
+        status = false;
     }
 }
 
