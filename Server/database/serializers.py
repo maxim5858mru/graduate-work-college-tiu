@@ -1,9 +1,9 @@
 from rest_framework import serializers
-from database.models import Database, Logs
+from database.models import Users, Logs
 
-class DatabaseDetailSerializer(serializers.ModelSerializer):
+class UsersDetailSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Database
+        model = Users
         fields = '__all__'
 
 class LogsDetailSerializer(serializers.ModelSerializer):

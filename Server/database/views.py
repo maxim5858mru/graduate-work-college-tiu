@@ -1,16 +1,16 @@
 from django.shortcuts import render
 from rest_framework import generics
-from database.serializers import DatabaseDetailSerializer, LogsDetailSerializer #, DatabaseListSerializer
-from database.models import Database, Logs
+from database.serializers import  UsersDetailSerializer, LogsDetailSerializer #, DatabaseListSerializer
+from database.models import Users, Logs
 
 # Create your views here.
 
-class DatabaseCreateView(generics.CreateAPIView):
-    serializer_class = DatabaseDetailSerializer
+class UsersCreateView(generics.CreateAPIView):
+    serializer_class = UsersDetailSerializer
 
-class DatabaseDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = DatabaseDetailSerializer
-    queryset = Database.objects.all()
+class UsersDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = UsersDetailSerializer
+    queryset = Users.objects.all()
 
 class LogsCreateView(generics.CreateAPIView):
     serializer_class = LogsDetailSerializer

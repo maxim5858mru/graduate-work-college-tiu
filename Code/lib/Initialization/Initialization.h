@@ -2,7 +2,8 @@
 #define INITIALIZATION_H
 
 #include <Arduino.h>
-#include <SD.h>
+#include <SPIFFS.h>
+// #include <SD.h>
 #include <LiquidCrystal_I2C.h>
 #include "../EEPROM/EEPROM.h"
 #include "../Keypad/Keypad.h"
@@ -19,9 +20,10 @@
 // Идентификаторы флагов
 #define SDWorking flags[0]
 #define MDSNWorking flags[1]
+#define SPIFFSWorking flags[2]
 
 extern bool settings[8];
-extern bool flags[2];
+extern bool flags[3];
 
 extern LiquidCrystal_I2C lcd;
 extern EEPROM memory;
@@ -52,6 +54,9 @@ void setLoadFlag(uint8_t numberFlag, bool state);
 
 // Инициализация компонентов
 void componentsInit();
+
+// Вывод резульатов самодиагностики
+void showResultTest();
 
 /*** Прерывания ***/
 

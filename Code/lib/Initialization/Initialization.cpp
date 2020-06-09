@@ -11,7 +11,7 @@ void lcdInit()
 	lcd.clear();                                  // Сброс
 	lcd.backlight();
 	lcd.setCursor(0,0);
-	lcd.print("Loading   0%");                    // Вывод окна загрузки
+	lcd.print("Loading       0%");                // Вывод окна загрузки
 	lcd.setCursor(0, 1);
 	lcd.print("Status:  ///////");
 }
@@ -21,9 +21,9 @@ void lcdInit()
  */
 void writeLoadCent(int cent) {
     if (cent < 100) {
-        lcd.setCursor(9, 0);
+        lcd.setCursor(13, 0);
     } else {
-        lcd.setCursor(8,0);
+        lcd.setCursor(12,0);
     }
     lcd.print((String)cent);
 }
@@ -77,6 +77,9 @@ void componentsInit()
 	writeLoadCent(27);  
 
 	// Монтирование файловой системы
+	if (SPIFFS.begin(true)) {
+		SPIFFSWorking = true;
+	}
 	if (SD.begin() && SD.cardType() != CARD_NONE && SD.cardType() != CARD_UNKNOWN) {                  
 		SDWorking = true;
 	}
@@ -85,12 +88,39 @@ void componentsInit()
     // Проверка и вывод флагов состояния компонентов
     setLoadFlag(1, SDWorking);                    // 1 - SD
 	setLoadFlag(2, keypad.status);				  // 2 - Клавиатура
-	setLoadFlag(3, rfid.PCD_PerformSelfTest());	  // 3 - RFID
+	// setLoadFlag(3, rfid.PCD_PerformSelfTest());	  // 3 - RFID
+	setLoadFlag(3, "+");	  // 3 - RFID
     setLoadFlag(4, fingerprint.status);           // 4 - Сканер отпечатков пальцев 
     setLoadFlag(7, memory.status);                // 8 - Память
 	writeLoadCent(50);
+
 }
 
+// Вывод резульатов самодиагностики
+void showResultTest()
+{
+	Serial.print("1 SD: ");
+	Serial.println(SDWorking?"+":"-");
+
+	Serial.print("2 Keypad: ");
+	Serial.println(keypad.status?"+":"-");
+
+	Serial.print("3 RFID scanner: ");
+	// Serial.println(rfid.PCD_PerformSelfTest()?"+":"-");
+	Serial.println("+");
+
+	Serial.print("4 Fingerprint scanner: ");
+	Serial.println(fingerprint.status?"+":"-");
+
+	Serial.print("5 RTC-Clock: ");
+	Serial.println(RTC.status?"+":"-");
+
+	Serial.print("6 Wi-Fi connection: ");
+	Serial.println(WiFi.isConnected()?"+":"-");
+
+	Serial.print("7 EEPROM: ");
+	Serial.println(memory.status?"+":"-");
+}
 /*** Прерывания ***/
 
 // Настройка прерывания
@@ -121,6 +151,7 @@ void setInterrupt()
 
 	writeLoadCent(60);
 }
+
 
 // Прерывание на открытие двери при нажатии кнопки
 void open() 

@@ -1,9 +1,9 @@
 #include <Arduino.h>
+#include <SPIFFS.h>
 #include <SD.h>
 #include <WiFiClient.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
-#include <ArduinoOTA.h>
 #include "../lib/EEPROM/EEPROM.h"
 #include "../lib/Clock/Clock.h"
 #include "../lib/Keypad/Keypad.h"
@@ -22,6 +22,7 @@
 // Идентификаторы флагов
 #define SDWorking flags[0]
 #define MDSNWorking flags[1]
+#define SPIFFSWorking flags[2]
 
 // Параметры загружаемые с EEPROM
 bool settings[8] = {
@@ -34,9 +35,10 @@ bool settings[8] = {
 };
 
 // Флаги состояния
-bool flags[2] = {
+bool flags[3] = {
 	false,                                        // SD
-	false                                         // MDNS
+	false,                                        // MDNS
+	false										  // SPIFFS
 };
 
 String host;
@@ -64,33 +66,22 @@ void setup()
 	/* 3 этап - Настройка Wi-Fi */
 	if (memory.status) {
 		Network::setupWiFi();
-		if (WiFi.isConnected()) {
-			setLoadFlag(6, "+");
-		} 
-		else {
-			setLoadFlag(6, "-");
-		}     
 	} 
 	else {
 		Network::presetupWiFi();                  // Создание точки доступа с предустановленными значениями
-		setLoadFlag(6, "+");
 	}            
+	setLoadFlag(6, WiFi.isConnected()?"+":"-");
 	writeLoadCent(70);
 
 	/* 4 этап - Web-сервер */
-	if (RTC.begin()) {							  // Инициализация часов
-		setLoadFlag(5, "+");
-	} 
-	else {
-		setLoadFlag(5, "-");
-	}
+	setLoadFlag(5, RTC.begin()?"+":"-");		  // Инициализация часов
 	if (WiFi.isConnected()) {					  // Синхронизация часов
 		RTC.sync(http);
 	}
 	writeLoadCent(72);
 
 	// Настройка Web сервера
-	if (SDWorking && WiFi.status() == WL_CONNECTED) 
+	if (SPIFFSWorking && WiFi.status() == WL_CONNECTED) 
 	{
 		if (memory.status)                        // Включение MDNS
 		{
@@ -98,36 +89,14 @@ void setup()
 			if (!host.isEmpty() && MDNS.begin(host.c_str())) 
 			{
 				if (NeedSerial) {
-					Serial.println("MDNS включён, локальный адрес: http://" + String(host) + ".local/");
+					Serial.println("MDNS is enabled, the local address: http://" + String(host) + ".local/");
 				}
 				MDSNWorking = true;
 			}
 		}
 		writeLoadCent(75);
 
-		// Настройка маршрутизации сервера
-		// HTML
-		server.onNotFound(handleNotFound);
-		server.on("/", HTTP_GET, handleNotFound);  
-
-		// JS & CSS
-		server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-			request->send(SD, "/style.css", "text/css");
-		});
-		server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-			request->send(SD, "/script.js", "text/javascript");
-		});
-
-		// Используемые плагины
-		server.on("/FontAwsome/font-awsome all.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-			request->send(SD, "/FontAwsome/font-awsome all.css", "text/css");
-		});
-		server.on("/FontAwsome/fa-solid-900.woff2", HTTP_GET, [](AsyncWebServerRequest *request) {
-			request->send(SD, "/FontAwsome/fa-solid-900.woff2", "font/woff");
-		});
-		server.on("/FontAwsome/fa-solid-900.svg", HTTP_GET, [](AsyncWebServerRequest *request) {
-			request->send(SD, "/FontAwsome/fa-solid-900.svg", "image/svg+xml");
-		});
+		setRouting();							  // Настройка маршрутизации сервера
 		writeLoadCent(85);
 
 		// Включение сервера
@@ -136,19 +105,8 @@ void setup()
 			MDNS.addService("http", "tcp", 80);
 		}
 		writeLoadCent(90);
-
-		// Настройка перрывания для обновления по сети
-		ArduinoOTA.onStart([]{
-			String type;
-			if (ArduinoOTA.getCommand() == U_FLASH) {
-				type = "sketch";
-			}
-			else {
-				type = "filesystem";
-			}
-		});
-		ArduinoOTA.begin();
 	}
+	showResultTest();
 	writeLoadCent(100);
 	delay(500);
 
@@ -159,8 +117,6 @@ void setup()
 
 void loop()
 {
-	ArduinoOTA.handle();
-	
 	// Проверка расстояния 
 	if (Interface::getDistance(15, 4) < 60 || timer.timerIsWorking())      // Для энергии на подсветке
 	{

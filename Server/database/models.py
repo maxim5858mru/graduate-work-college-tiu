@@ -7,7 +7,7 @@ User = get_user_model()
 # После изменения ./manage.py makemigrations & python manage.py migrate
 # Отключение сервера sudo fuser -k 8000/tcp
 
-class Database(models.Model):
+class Users(models.Model):
     firstName = models.CharField(verbose_name='First Name', max_length=10, default="Unset")
     lastName = models.CharField(verbose_name='Last Name', max_length=10, default="Unset")
     middleName = models.CharField(verbose_name='Middle Name', max_length=10, default="Unset")

@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <SD.h>
 #include <ArduinoJson.h>
+#include <WiFiClient.h>
 #include <LiquidCrystal_I2C.h>
 #include "../EEPROM/EEPROM.h"
 #include "../Keypad/Keypad.h"
@@ -16,10 +17,16 @@
 #define RELE1_PIN 25
 #define TONE_PIN  27
 
+#define SDWorking flags[0]
+
+extern bool flags[3];
+
 extern Keypad keypad;
-extern LiquidCrystal_I2C lcd;
 extern RFID rfid;
+extern FingerPrint fingerprint;
+extern LiquidCrystal_I2C lcd;
 extern Clock RTC;
+extern WiFiClient http;
 
 namespace Interface
 {
