@@ -99,6 +99,7 @@ void componentsInit()
 // Вывод резульатов самодиагностики
 void showResultTest()
 {
+	Serial.println("\nDevice self-testing");
 	Serial.print("1 SD: ");
 	Serial.println(SDWorking?"+":"-");
 

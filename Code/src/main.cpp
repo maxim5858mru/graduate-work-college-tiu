@@ -164,6 +164,15 @@ void loop()
 		if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {  // Если карта поднесена только что и считывание удалось, то выполняем проверку
             Interface::checkAndGetRFID();
         }
+
+		//Fingerprint
+		uint16_t fingerID = fingerprint.read();
+		if ((fingerID >= 1) && (fingerID <= 130)) {
+			Interface::checkFingerID(fingerID);
+		}
+		else {
+			delay(50);
+		}
 	}
 	else {
 		lcd.noBacklight();
