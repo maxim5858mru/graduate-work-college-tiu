@@ -45,29 +45,28 @@ void Interface::goHome()
  */
 void Interface::open(uint8_t door)
 {
-    int pin = -1; // Оперделение номе вывода МК для реле
-    if (door == 0) {
-        pin = RELE0_PIN;
-    }
-    else if (door == 1) {
-        pin = RELE1_PIN;
+    int pin;                                      // Оперделение номе вывода МК для реле
+    switch (door)
+    {
+    case 0:
+        pin = 25;
+        break;
+    default:
+        pin = 26;
+        break;
     }
 
-    lcd.clear(); // Вывод информации на дисплей
+    lcd.clear();                                  // Вывод информации на дисплей
     lcd.backlight();
     lcd.print("Open");
 
-    if (door != -1) {
-        digitalWrite(pin, LOW);
-    }                           // Открытие двери
-    ledcAttachPin(TONE_PIN, 0); // Включаем пьезодинамик
+    digitalWrite(pin, LOW);                       // Открытие двери
+    ledcAttachPin(TONE_PIN, 0);                   // Включаем пьезодинамик
     delay(5000);
     ledcDetachPin(TONE_PIN);
-    if (door != -1) {
-        digitalWrite(pin, HIGH);
-    } // Закрытие двери
+    digitalWrite(pin, HIGH);                      // Закрытие двери
 
-    goHome(); // Сброс дисплея
+    goHome();                                     // Сброс дисплея
     if (getDistance(15, 4) > 60) {
         lcd.noBacklight();
     }
@@ -226,11 +225,11 @@ bool Interface::checkPassword(String password)
             while (z < 10)
             {
                 // Отправка запроса
-                http.connect("192.168.1.6", 8000);
-                http.println("GET /api/v1/database/users/detail/1 HTTP/1.1\r\nHost: 192.168.1.6:8000\r\n\r\n");
+                http.connect("192.168.1.15", 8000);
+                http.println("GET /api/v1/database/users/detail/1 HTTP/1.1\r\nHost: 192.168.1.15:8000\r\n\r\n");
                 delay(200);
 
-                if (http.find("\r\n\r\n")) {
+                if (http.find("\r\n\r\n") && http.find("HTTP 200 OK")) {
                     deserializeJson(json, http);
 
                     if (json["methodPIN"]) {
@@ -423,11 +422,11 @@ bool Interface::checkAndGetRFID()
         while (z < 10)
         {
             // Отправка запроса
-            http.connect("192.168.1.6", 8000);
-            http.println("GET /api/v1/database/users/detail/1 HTTP/1.1\r\nHost: 192.168.1.6:8000\r\n\r\n");
+            http.connect("192.168.1.15", 8000);
+            http.println("GET /api/v1/database/users/detail/1 HTTP/1.1\r\nHost: 192.168.1.15:8000\r\n\r\n");
             delay(200);
 
-            if (http.find("\r\n\r\n")) {
+            if (http.find("\r\n\r\n") && http.find("HTTP 200 OK")) {
                 deserializeJson(json, http);
 
                 if (json["methodRFID"]) {
@@ -535,6 +534,10 @@ bool Interface::checkAndGetRFID()
     return true;
 }
 
+/** Проверка ID скана отпечатка
+ * @param id - для передачи функции уже считаного значения
+ * @return !!!!!Учитывая что открытие двери просходит внутри функции, для чего возратное значение не знаю
+ */
 bool Interface::checkFingerID(uint16_t id)
 {
     DynamicJsonDocument json(550);
@@ -574,11 +577,11 @@ bool Interface::checkFingerID(uint16_t id)
         while (z < 10)
         {
             // Отправка запроса
-            http.connect("192.168.1.6", 8000);
-            http.println("GET /api/v1/database/users/detail/1 HTTP/1.1\r\nHost: 192.168.1.6:8000\r\n\r\n");
+            http.connect("192.168.1.15", 8000);
+            http.println("GET /api/v1/database/users/detail/1 HTTP/1.1\r\nHost: 192.168.1.15:8000\r\n\r\n");
             delay(200);
 
-            if (http.find("\r\n\r\n")) {
+            if (http.find("\r\n\r\n") && http.find("HTTP 200 OK")) {
                 deserializeJson(json, http);
 
                 // Первичная проверка

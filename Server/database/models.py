@@ -38,6 +38,7 @@ class Logs(models.Model):
         (1, 'OPEN'),
         (2, 'FALL_FIRST_AUTH'),
         (3, 'FALL_SEC_AUTH'),
+        (4, 'FALL_BY_TIME'),
     )
     type = models.IntegerField(verbose_name='Type of log entry', choices=LOG_TYPE)
     seconds = models.IntegerField(verbose_name='Seconds', null=True)

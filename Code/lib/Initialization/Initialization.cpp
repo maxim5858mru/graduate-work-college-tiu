@@ -128,18 +128,20 @@ void showResultTest()
 void setInterrupt()
 {
 	int pins[2][2] = {
-	  {26, 25},                                   // 0 строка - реле
-	  {13, 12}                                    // 1 строка - кнопки
+	  {25, 26},                                   // 0 строка - реле
+	  {13, 33}                                    // 1 строка - кнопки
 	};                     
 
-	if (memory.status) for (int i = 1; i <= 2; i++) {
-	  settings[i + 3] = memory.readbit(i + 3, 0);
-	  if (settings[i + 3]) {
-	    pinMode(pins[1][i], INPUT);               // Настройка входа для кнопки
-	    pinMode(pins[0][i], OUTPUT);              // Настройка сигнала для реле
-	    digitalWrite(pins[0][i], HIGH);
-	    attachInterrupt(digitalPinToInterrupt(pins[1][i]), open, FALLING); // Добавление прерывания
-	  }
+
+	for (int i = 0; i < 2; i++) {
+		if (memory.status) {
+			settings[i + 4] = memory.readbit(i + 3, 0);
+		}
+	  	if (settings[i + 4]) {
+			pinMode(pins[1][i], INPUT);           // Настройка входа для кнопки
+	    	pinMode(pins[0][i], OUTPUT);          // Настройка сигнала для реле
+	    	digitalWrite(pins[0][i], HIGH);
+		}
 	}
 
 	// Псевдо-проверка
@@ -148,6 +150,12 @@ void setInterrupt()
 	} 
 	else if (digitalRead(pins[1][1]) == LOW) {
 	  Interface::open(1);
+	}
+
+	for (int i = 0; i < 2; i++) {
+	  	if (settings[i + 4]) {
+	    	attachInterrupt(digitalPinToInterrupt(pins[1][i]), open, FALLING); 						// Добавление прерывания
+		}
 	}
 
 	writeLoadCent(60);
