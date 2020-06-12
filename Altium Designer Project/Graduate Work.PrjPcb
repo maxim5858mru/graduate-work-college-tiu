@@ -1,4 +1,4 @@
-[Design]
+п»ї[Design]
 Version=1.0
 HierarchyMode=0
 ChannelRoomNamingStyle=0
@@ -28,7 +28,7 @@ DItemRevisionGUID=
 ReportSuppressedErrorsInMessages=0
 FSMCodingStyle=eFMSDropDownList_OneProcess
 FSMEncodingStyle=eFMSDropDownList_OneHot
-OutputPath=Project Outputs for Graduate Work
+OutputPath=
 LogFolderPath=
 ManagedProjectGUID=
 IncludeDesignInRelease=0
@@ -247,112 +247,108 @@ DItemRevisionGUID=
 DocumentPath=Project Outputs for Graduate Work\NC Drill\PCB.TXT
 DItemRevisionGUID=
 
-[GeneratedDocument11]
-DocumentPath=Документация\ПРИЛОЖЕНИЕ Б.pdf
-DItemRevisionGUID=
-
 [Parameter1]
-Name=Дата изменения
+Name=Р”Р°С‚Р° РёР·РјРµРЅРµРЅРёСЏ
 Value=
 
 [Parameter2]
-Name=Доп.согл.
+Name=Р”РѕРї.СЃРѕРіР».
 Value=
 
 [Parameter3]
-Name=Инвентарный номер дубликата
+Name=РРЅРІРµРЅС‚Р°СЂРЅС‹Р№ РЅРѕРјРµСЂ РґСѓР±Р»РёРєР°С‚Р°
 Value=
 
 [Parameter4]
-Name=Индекс заказчика
+Name=РРЅРґРµРєСЃ Р·Р°РєР°Р·С‡РёРєР°
 Value=
 
 [Parameter5]
-Name=Компания
+Name=РљРѕРјРїР°РЅРёСЏ
 Value=
 
 [Parameter6]
-Name=Литера1
+Name=Р›РёС‚РµСЂР°1
 Value=
 
 [Parameter7]
-Name=Литера2
+Name=Р›РёС‚РµСЂР°2
 Value=
 
 [Parameter8]
-Name=Литера3
+Name=Р›РёС‚РµСЂР°3
 Value=
 
 [Parameter9]
-Name=Наименование
+Name=РќР°РёРјРµРЅРѕРІР°РЅРёРµ
 Value=
 
 [Parameter10]
-Name=Наименование1
+Name=РќР°РёРјРµРЅРѕРІР°РЅРёРµ1
 Value=
 
 [Parameter11]
-Name=Наименование2
+Name=РќР°РёРјРµРЅРѕРІР°РЅРёРµ2
 Value=
 
 [Parameter12]
-Name=Начальник отдела
+Name=РќР°С‡Р°Р»СЊРЅРёРє РѕС‚РґРµР»Р°
 Value=
 
 [Parameter13]
-Name=Номер УД
+Name=РќРѕРјРµСЂ РЈР”
 Value=
 
 [Parameter14]
-Name=Номер извещения
+Name=РќРѕРјРµСЂ РёР·РІРµС‰РµРЅРёСЏ
 Value=
 
 [Parameter15]
-Name=Нормоконтроль
+Name=РќРѕСЂРјРѕРєРѕРЅС‚СЂРѕР»СЊ
 Value=
 
 [Parameter16]
-Name=Обозначение
+Name=РћР±РѕР·РЅР°С‡РµРЅРёРµ
 Value=
 
 [Parameter17]
-Name=Первичная применяемость
+Name=РџРµСЂРІРёС‡РЅР°СЏ РїСЂРёРјРµРЅСЏРµРјРѕСЃС‚СЊ
 Value=
 
 [Parameter18]
-Name=Порядковый номер изменения
+Name=РџРѕСЂСЏРґРєРѕРІС‹Р№ РЅРѕРјРµСЂ РёР·РјРµРЅРµРЅРёСЏ
 Value=
 
 [Parameter19]
-Name=Проверил
+Name=РџСЂРѕРІРµСЂРёР»
 Value=
 
 [Parameter20]
-Name=Разработал
+Name=Р Р°Р·СЂР°Р±РѕС‚Р°Р»
 Value=
 
 [Parameter21]
-Name=Решение1
+Name=Р РµС€РµРЅРёРµ1
 Value=
 
 [Parameter22]
-Name=Решение2
+Name=Р РµС€РµРЅРёРµ2
 Value=
 
 [Parameter23]
-Name=Технолог
+Name=РўРµС…РЅРѕР»РѕРі
 Value=
 
 [Parameter24]
-Name=Тип документа
+Name=РўРёРї РґРѕРєСѓРјРµРЅС‚Р°
 Value=
 
 [Parameter25]
-Name=Указания об изменении листа
+Name=РЈРєР°Р·Р°РЅРёСЏ РѕР± РёР·РјРµРЅРµРЅРёРё Р»РёСЃС‚Р°
 Value=
 
 [Parameter26]
-Name=Утвердил
+Name=РЈС‚РІРµСЂРґРёР»
 Value=
 
 [Configuration1]
@@ -366,7 +362,7 @@ ContentTypeGUID=CB6F2064-E317-11DF-B822-12313F0024A2
 ConfigurationType=Source
 
 [Generic_EDE]
-OutputDir=Project Outputs for Graduate Work
+OutputDir=
 
 [OutputGroup1]
 Name=Netlist Outputs
@@ -477,7 +473,7 @@ OutputDefault20=0
 [OutputGroup2]
 Name=Simulator Outputs
 Description=
-TargetPrinter=Microsoft Print to PDF
+TargetPrinter=Canon PIXMA TS8040
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 
 [OutputGroup3]
@@ -1459,104 +1455,104 @@ ComponentUpdate17=1
 ComponentIsDeviceSheet17=0
 ComponentLibIdentifierKind18=Library Name And Type
 ComponentLibraryIdentifier18=Schlib.SchLib
-ComponentDesignItemID18=Батарея
-ComponentSymbolReference18=Батарея
+ComponentDesignItemID18=Р‘Р°С‚Р°СЂРµСЏ
+ComponentSymbolReference18=Р‘Р°С‚Р°СЂРµСЏ
 ComponentUpdate18=1
 ComponentIsDeviceSheet18=0
 ComponentLibIdentifierKind19=Library Name And Type
 ComponentLibraryIdentifier19=Schlib.SchLib
-ComponentDesignItemID19=Биполярный Транзистор
-ComponentSymbolReference19=Биполярный Транзистор
+ComponentDesignItemID19=Р‘РёРїРѕР»СЏСЂРЅС‹Р№ РўСЂР°РЅР·РёСЃС‚РѕСЂ
+ComponentSymbolReference19=Р‘РёРїРѕР»СЏСЂРЅС‹Р№ РўСЂР°РЅР·РёСЃС‚РѕСЂ
 ComponentUpdate19=1
 ComponentIsDeviceSheet19=0
 ComponentLibIdentifierKind20=Library Name And Type
 ComponentLibraryIdentifier20=Schlib.SchLib
-ComponentDesignItemID20=Винтовой Клеммник 3 Pin
-ComponentSymbolReference20=Винтовой Клеммник 3 Pin
+ComponentDesignItemID20=Р’РёРЅС‚РѕРІРѕР№ РљР»РµРјРјРЅРёРє 3 Pin
+ComponentSymbolReference20=Р’РёРЅС‚РѕРІРѕР№ РљР»РµРјРјРЅРёРє 3 Pin
 ComponentUpdate20=1
 ComponentIsDeviceSheet20=0
 ComponentLibIdentifierKind21=Library Name And Type
 ComponentLibraryIdentifier21=Schlib.SchLib
-ComponentDesignItemID21=Диод Шотки
-ComponentSymbolReference21=Диод Шотки
+ComponentDesignItemID21=Р”РёРѕРґ РЁРѕС‚РєРё
+ComponentSymbolReference21=Р”РёРѕРґ РЁРѕС‚РєРё
 ComponentUpdate21=1
 ComponentIsDeviceSheet21=0
 ComponentLibIdentifierKind22=Library Name And Type
 ComponentLibraryIdentifier22=Schlib.SchLib
-ComponentDesignItemID22=Диод
-ComponentSymbolReference22=Диод
+ComponentDesignItemID22=Р”РёРѕРґ
+ComponentSymbolReference22=Р”РёРѕРґ
 ComponentUpdate22=1
 ComponentIsDeviceSheet22=0
 ComponentLibIdentifierKind23=Library Name And Type
 ComponentLibraryIdentifier23=Schlib.SchLib
-ComponentDesignItemID23=Катушка индуктивности
-ComponentSymbolReference23=Катушка индуктивности
+ComponentDesignItemID23=РљР°С‚СѓС€РєР° РёРЅРґСѓРєС‚РёРІРЅРѕСЃС‚Рё
+ComponentSymbolReference23=РљР°С‚СѓС€РєР° РёРЅРґСѓРєС‚РёРІРЅРѕСЃС‚Рё
 ComponentUpdate23=1
 ComponentIsDeviceSheet23=0
 ComponentLibIdentifierKind24=Library Name And Type
 ComponentLibraryIdentifier24=Schlib.SchLib
-ComponentDesignItemID24=Кварцевый Резонатор
-ComponentSymbolReference24=Кварцевый Резонатор
+ComponentDesignItemID24=РљРІР°СЂС†РµРІС‹Р№ Р РµР·РѕРЅР°С‚РѕСЂ
+ComponentSymbolReference24=РљРІР°СЂС†РµРІС‹Р№ Р РµР·РѕРЅР°С‚РѕСЂ
 ComponentUpdate24=1
 ComponentIsDeviceSheet24=0
 ComponentLibIdentifierKind25=Library Name And Type
 ComponentLibraryIdentifier25=Schlib.SchLib
-ComponentDesignItemID25=Кнопка (2-х парная)
-ComponentSymbolReference25=Кнопка (2-х парная)
+ComponentDesignItemID25=РљРЅРѕРїРєР° (2-С… РїР°СЂРЅР°СЏ)
+ComponentSymbolReference25=РљРЅРѕРїРєР° (2-С… РїР°СЂРЅР°СЏ)
 ComponentUpdate25=1
 ComponentIsDeviceSheet25=0
 ComponentLibIdentifierKind26=Library Name And Type
 ComponentLibraryIdentifier26=Schlib.SchLib
-ComponentDesignItemID26=Кнопка
-ComponentSymbolReference26=Кнопка
+ComponentDesignItemID26=РљРЅРѕРїРєР°
+ComponentSymbolReference26=РљРЅРѕРїРєР°
 ComponentUpdate26=1
 ComponentIsDeviceSheet26=0
 ComponentLibIdentifierKind27=Library Name And Type
 ComponentLibraryIdentifier27=Schlib.SchLib
-ComponentDesignItemID27=Конденсатор
-ComponentSymbolReference27=Конденсатор
+ComponentDesignItemID27=РљРѕРЅРґРµРЅСЃР°С‚РѕСЂ
+ComponentSymbolReference27=РљРѕРЅРґРµРЅСЃР°С‚РѕСЂ
 ComponentUpdate27=1
 ComponentIsDeviceSheet27=0
 ComponentLibIdentifierKind28=Library Name And Type
 ComponentLibraryIdentifier28=Schlib.SchLib
-ComponentDesignItemID28=Матричная Клавиатура 4x4
-ComponentSymbolReference28=Матричная Клавиатура 4x4
+ComponentDesignItemID28=РњР°С‚СЂРёС‡РЅР°СЏ РљР»Р°РІРёР°С‚СѓСЂР° 4x4
+ComponentSymbolReference28=РњР°С‚СЂРёС‡РЅР°СЏ РљР»Р°РІРёР°С‚СѓСЂР° 4x4
 ComponentUpdate28=1
 ComponentIsDeviceSheet28=0
 ComponentLibIdentifierKind29=Library Name And Type
 ComponentLibraryIdentifier29=Schlib.SchLib
-ComponentDesignItemID29=Подстроечный Резистор
-ComponentSymbolReference29=Подстроечный Резистор
+ComponentDesignItemID29=РџРѕРґСЃС‚СЂРѕРµС‡РЅС‹Р№ Р РµР·РёСЃС‚РѕСЂ
+ComponentSymbolReference29=РџРѕРґСЃС‚СЂРѕРµС‡РЅС‹Р№ Р РµР·РёСЃС‚РѕСЂ
 ComponentUpdate29=1
 ComponentIsDeviceSheet29=0
 ComponentLibIdentifierKind30=Library Name And Type
 ComponentLibraryIdentifier30=Schlib.SchLib
-ComponentDesignItemID30=Пьездодинамик
-ComponentSymbolReference30=Пьездодинамик
+ComponentDesignItemID30=РџСЊРµР·РґРѕРґРёРЅР°РјРёРє
+ComponentSymbolReference30=РџСЊРµР·РґРѕРґРёРЅР°РјРёРє
 ComponentUpdate30=1
 ComponentIsDeviceSheet30=0
 ComponentLibIdentifierKind31=Library Name And Type
 ComponentLibraryIdentifier31=Schlib.SchLib
-ComponentDesignItemID31=Резистор 0.125 Вт
-ComponentSymbolReference31=Резистор 0.125 Вт
+ComponentDesignItemID31=Р РµР·РёСЃС‚РѕСЂ 0.125 Р’С‚
+ComponentSymbolReference31=Р РµР·РёСЃС‚РѕСЂ 0.125 Р’С‚
 ComponentUpdate31=1
 ComponentIsDeviceSheet31=0
 ComponentLibIdentifierKind32=Library Name And Type
 ComponentLibraryIdentifier32=Schlib.SchLib
-ComponentDesignItemID32=Резистор 1 Вт
-ComponentSymbolReference32=Резистор 1 Вт
+ComponentDesignItemID32=Р РµР·РёСЃС‚РѕСЂ 1 Р’С‚
+ComponentSymbolReference32=Р РµР·РёСЃС‚РѕСЂ 1 Р’С‚
 ComponentUpdate32=1
 ComponentIsDeviceSheet32=0
 ComponentLibIdentifierKind33=Library Name And Type
 ComponentLibraryIdentifier33=Schlib.SchLib
-ComponentDesignItemID33=Реле SRD-05VDC
-ComponentSymbolReference33=Реле SRD-05VDC
+ComponentDesignItemID33=Р РµР»Рµ SRD-05VDC
+ComponentSymbolReference33=Р РµР»Рµ SRD-05VDC
 ComponentUpdate33=1
 ComponentIsDeviceSheet33=0
 ComponentLibIdentifierKind34=Library Name And Type
 ComponentLibraryIdentifier34=Schlib.SchLib
-ComponentDesignItemID34=Светодиод
-ComponentSymbolReference34=Светодиод
+ComponentDesignItemID34=РЎРІРµС‚РѕРґРёРѕРґ
+ComponentSymbolReference34=РЎРІРµС‚РѕРґРёРѕРґ
 ComponentUpdate34=1
 ComponentIsDeviceSheet34=0
 FullReplace=0
