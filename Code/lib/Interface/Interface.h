@@ -12,6 +12,7 @@
 #include "../Fingerprint/Fingerprint.h"
 #include "../Clock/Clock.h"
 #include "../Timer/Timer.h"
+#include "../Routing/Routing.h"
 
 #define RELE0_PIN 26
 #define RELE1_PIN 25
@@ -19,6 +20,7 @@
 
 #define SDWorking flags[0]
 
+extern byte openTime;                            
 extern bool flags[3];
 
 extern Keypad keypad;
@@ -44,10 +46,13 @@ namespace Interface
 	 * @param door - открываемая дверь
 	 */
 	void open(uint8_t door);
+	// Отказ в доступе
+	void accessDeny();
 	/** Отказ в доступе
+	 * @param id - номер записи пользователя
 	 * @param byTime - причиной отказа является время?
 	 */
-	void accessDeny(bool byTime);
+	void accessDeny( int id, bool byTime);
 
 	/** Вывод пароля (точнее его изменения) на дисплей
 	 * @param password - вводимый пароль

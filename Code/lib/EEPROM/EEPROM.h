@@ -51,7 +51,7 @@ public:
      * @param called - для вывода ошибки, чтобы можно было понять какая функция вызвала readbyte
      * @return значение считываемого байта, в случае ошибки вернёт код ошибки, которая определенна в директиве как ERROR_CODE
      */
-    byte readbyte(int memoryAddress, bool checkTryAgain, bool showError, const char* called = NULL);
+    byte readbyte(int memoryAddress, bool checkTryAgain = true, bool showError = false, const char* called = NULL);
 
     /** Считывание бита. Функция (почти) является обвёрткой для readbyte
      * @param bitNumber - номер считываемого бита

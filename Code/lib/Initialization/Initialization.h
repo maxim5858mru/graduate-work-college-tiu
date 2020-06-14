@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include <SPIFFS.h>
-// #include <SD.h>
+#include <SD.h>
 #include <LiquidCrystal_I2C.h>
 #include "../EEPROM/EEPROM.h"
 #include "../Keypad/Keypad.h"
@@ -23,6 +23,13 @@
 #define SPIFFSWorking flags[2]
 
 extern bool settings[8];
+extern byte delayTime;                            
+extern byte openTime;                            
+extern int databaseCap;                             
+extern String hostURL;                              
+extern String databaseURL;                          
+// extern String databaseLogin;
+// extern String databasePass;
 extern bool flags[3];
 
 extern LiquidCrystal_I2C lcd;

@@ -58,8 +58,16 @@ void componentsInit()
 	writeLoadCent(20);                            // Промежуточный вывод процентов
 
 	// Инициализация дополнительных компонентов
-	if (memory.status) for (int i = 0; i < 8; i++) {                       // Считывание параметров
-		settings[i] = memory.readbit(i, 0);
+	if (memory.status) {						  // Считывание параметров
+		for (int i = 0; i < 8; i++) {                       
+			settings[i] = memory.readbit(i, 0);
+		}
+
+		hostURL = memory.readString(20, 385);
+		databaseURL = memory.readString(25, 405);
+		databaseCap = memory.readbyte(430);
+		delayTime = memory.readbyte(431);
+		openTime = memory.readbyte(432);
 	}
 
 	if (NeedSerial) {                             // UART

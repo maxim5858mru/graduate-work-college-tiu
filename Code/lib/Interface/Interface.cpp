@@ -62,7 +62,7 @@ void Interface::open(uint8_t door)
 
     digitalWrite(pin, LOW);                       // Открытие двери
     ledcAttachPin(TONE_PIN, 0);                   // Включаем пьезодинамик
-    delay(5000);
+    delay(openTime * 100);
     ledcDetachPin(TONE_PIN);
     digitalWrite(pin, HIGH);                      // Закрытие двери
 
@@ -72,10 +72,44 @@ void Interface::open(uint8_t door)
     }
 }
 
+// Отказ в доступе
+void Interface::accessDeny()
+{
+    lcd.clear();
+    lcd.print("Access Deny");
+    delay(2000);
+
+    if (WiFi.isConnected() && http.connect(databaseURL.c_str(), 8000)) {
+        DynamicJsonDocument doc(500);
+        doc["type"] = 2;
+        doc["seconds"] = second();
+        doc["minutes"] = minute();
+        doc["hour"] = hour();
+        doc["day"] = day();
+        doc["month"] = month();
+        doc["year"] = year();
+        doc["door"] = 0;
+        doc["userID"] = 0;
+        doc["user"] = 1;
+        
+        http.println("POST /api/v1/database/logs/create HTTP/1.1");
+        http.println("Host: " + databaseURL + ":8000");
+        http.println("Content-Type: application/json");
+        http.print("Content-Length: ");
+        http.println(measureJson(doc));
+        http.println("Connection: close\r\n");
+        serializeJson(doc, http);
+        http.readString();
+        http.stop();
+    }
+    goHome();
+}
+
 /** Отказ в доступе
- * @param - причиной отказа является время?
+ * @param id - номер записи пользователя
+ * @param byTime - причиной отказа является время?
  */
-void Interface::accessDeny(bool byTime)
+void Interface::accessDeny(int id, bool byTime)
 {
     lcd.clear();
     if (byTime) {
@@ -86,6 +120,29 @@ void Interface::accessDeny(bool byTime)
     }
     delay(2000);
 
+    if (WiFi.isConnected() && http.connect(databaseURL.c_str(), 8000)) {
+        DynamicJsonDocument doc(500);
+        doc["type"] = byTime?4:3;
+        doc["seconds"] = second();
+        doc["minutes"] = minute();
+        doc["hour"] = hour();
+        doc["day"] = day();
+        doc["month"] = month();
+        doc["year"] = year();
+        doc["door"] = 0;
+        doc["userID"] = id;
+        doc["user"] = 1;
+        
+        http.println("POST /api/v1/database/logs/create HTTP/1.1");
+        http.println("Host: " + databaseURL + ":8000");
+        http.println("Content-Type: application/json");
+        http.print("Content-Length: ");
+        http.println(measureJson(doc));
+        http.println("Connection: close\r\n");
+        serializeJson(doc, http);
+        http.readString();
+        http.stop();
+    }
     goHome();
 }
 
@@ -225,11 +282,20 @@ bool Interface::checkPassword(String password)
             while (z < 10)
             {
                 // Отправка запроса
-                http.connect("192.168.1.15", 8000);
-                http.println("GET /api/v1/database/users/detail/1 HTTP/1.1\r\nHost: 192.168.1.15:8000\r\n\r\n");
+                if (!http.connect(databaseURL.c_str(), 8000)) {
+                    lcd.clear();
+                    lcd.print("Fall to connect");
+                    lcd.setCursor(0,1);
+                    lcd.print("database");
+                    delay(5000);
+                    goHome();
+                    return false;
+                }
+
+                http.printf("GET /api/v1/database/users/detail/%i HTTP/1.1\r\nHost: %s:8000\r\n\r\n", z, databaseURL.c_str());
                 delay(200);
 
-                if (http.find("\r\n\r\n") && http.find("HTTP 200 OK")) {
+                if (http.find("\r\n\r\n")) {
                     deserializeJson(json, http);
 
                     if (json["methodPIN"]) {
@@ -255,7 +321,7 @@ bool Interface::checkPassword(String password)
         // Контрольная проверка, далее идёт работа на выбывание
         String JPIN = json["pin"];
         if (!json["methodPIN"] || password != JPIN) {
-            accessDeny(false);
+            accessDeny();
             return false;
         }
 
@@ -269,7 +335,7 @@ bool Interface::checkPassword(String password)
         int eHour = json["endTime"];
         eHour /= 100;
         if (!RTC.compare(sHour, sMin, eHour, eMin)) {
-            accessDeny(true);
+            accessDeny(json["id"], true);
             return false;
         }
 
@@ -308,13 +374,14 @@ bool Interface::checkPassword(String password)
             // Проверка
             for (int i = 0; i < 10; i++) {
                 if (JRFID[i] != RFID[i]) {
-                    accessDeny(false);
+                    accessDeny(json["id"], false);
                     return false;
                 }
             }
         }
 
-        if (json["methodFPID"]) {                 // Fingerprint
+        // Fingerprint
+        if (json["methodFPID"]) {                 
             uint16_t tempID = 0xFFFF;             // Переменная для хранения ID отпечатка
 
             lcd.clear();
@@ -326,7 +393,7 @@ bool Interface::checkPassword(String password)
             }
 
             if (tempID == 0xFF00 || tempID != json["fingerprintID"]) {     // Неправильный отпечаток
-                accessDeny(false);
+                accessDeny(json["id"], false);
                 return false;
             }
         }
@@ -379,6 +446,7 @@ bool Interface::checkAndGetRFID()
             lcd.setCursor(0, 1);
             lcd.print("empty");
             delay(5000);
+            goHome();
             return false;
         }
 
@@ -388,6 +456,8 @@ bool Interface::checkAndGetRFID()
 
             // Первичная проверка
             if (json["methodRFID"]) {
+                bool goWhile = true;
+
                 // Импорт массива
                 byte JRFID[10] = {
                     json["rfid1"], 
@@ -402,14 +472,13 @@ bool Interface::checkAndGetRFID()
                     json["rfid10"]
                 };
 
-                bool result = true;
                 for (int i = 0; i < 10; i++) {
                     if (JRFID[i] != RFID[i]) {
-                        result = false;
+                        goWhile = false;
                     }
                 }
 
-                if (result) {
+                if (goWhile) {
                     break;
                 }
             }
@@ -418,18 +487,27 @@ bool Interface::checkAndGetRFID()
         }
     }
     else if (WiFi.isConnected()) {
-        int z = 1;                            // Счётчик для Web-database
+        int z = 1;                                // Счётчик для Web-database
         while (z < 10)
         {
             // Отправка запроса
-            http.connect("192.168.1.15", 8000);
-            http.println("GET /api/v1/database/users/detail/1 HTTP/1.1\r\nHost: 192.168.1.15:8000\r\n\r\n");
+            if (!http.connect(databaseURL.c_str(), 8000)) {
+                lcd.clear();
+                lcd.print("Fall to connect");
+                lcd.setCursor(0,1);
+                lcd.print("database");
+                delay(5000);
+                goHome();
+                return false;
+            }
+            http.printf("GET /api/v1/database/users/detail/%i HTTP/1.1\r\nHost: %s:8000\r\n\r\n", z, databaseURL.c_str());
             delay(200);
 
-            if (http.find("\r\n\r\n") && http.find("HTTP 200 OK")) {
+            if (http.find("\r\n\r\n")) {
                 deserializeJson(json, http);
 
                 if (json["methodRFID"]) {
+                    bool goWhile = true;         // Флаг для реализации выхода из цикла перебора записей
                     byte JRFID[10] = {
                         json["rfid1"], 
                         json["rfid2"], 
@@ -445,16 +523,22 @@ bool Interface::checkAndGetRFID()
 
                     for (int i = 0; i < 10; i++) {
                         if (JRFID[i] != RFID[i]) {
+                            goWhile = false;
                             break;
                         }
                     }
+
+                    if (goWhile) {
+                        break;
+                    }
+
                 }
             }
 
             z++;
         }
     }
-    else {                                    // Без локальной или сетевой базы данных продолжать попытки бесмысленно
+    else {                                        // Без локальной или сетевой базы данных продолжать попытки бесмысленно
         lcd.clear();
         lcd.print("Database is");
         lcd.setCursor(0, 1);
@@ -479,7 +563,7 @@ bool Interface::checkAndGetRFID()
 
     for (int i = 0; i < 10; i++) {
         if (JRFID[i] != RFID[i]) {
-            accessDeny(false);
+            accessDeny();
             return false;
         }
     }
@@ -494,7 +578,7 @@ bool Interface::checkAndGetRFID()
     int eHour = json["endTime"];
     eHour /= 100;
     if (!RTC.compare(sHour, sMin, eHour, eMin)) {
-        accessDeny(true);
+        accessDeny(json["id"], true);
         return false;
     }
 
@@ -508,29 +592,30 @@ bool Interface::checkAndGetRFID()
         String PIN = readPassword(true);
         String JPIN = json["pin"];
         if (PIN != JPIN) {
-            accessDeny(false);
+            accessDeny(json["id"], false);
             return false;
         }
     }
 
-    if (json["methodFPID"]) {                 // Fingerprint
-        uint16_t tempID = 0xFFFF;             // Переменная для хранения ID отпечатка
+    // Fingerprint
+    if (json["methodFPID"]) {                 
+        uint16_t tempID = 0xFFFF;                 // Переменная для хранения ID отпечатка
 
         lcd.clear();
         lcd.print("Put your finger");
 
-        while (tempID == 0xFFFF) {            // Ожидание отпечатка пальца
+        while (tempID == 0xFFFF) {                // Ожидание отпечатка пальца
             tempID = fingerprint.read();
             delay(50);
         }
 
-        if (tempID == 0xFF00 || tempID != json["fingerprintID"]) {     // Неправильный отпечаток
-            accessDeny(false);
+        if (tempID == 0xFF00 || tempID != json["fingerprintID"]) {         // Неправильный отпечаток
+            accessDeny(json["id"], false);
             return false;
         }
     }
 
-    open(json["door"]); // Открытие двери
+    open(json["door"]);                           // Открытие двери
     return true;
 }
 
@@ -551,7 +636,7 @@ bool Interface::checkFingerID(uint16_t id)
 
         // Перебор записей. К сожалению, всю базу не запихнуть в буфер, по этому перебор записей пользователей
         file = folder.openNextFile();
-        if (!file) {                          // Если файлов нет, сразу уведомляем об этом
+        if (!file) {                              // Если файлов нет, сразу уведомляем об этом
             lcd.clear();
             lcd.print("Database is");
             lcd.setCursor(0, 1);
@@ -565,7 +650,7 @@ bool Interface::checkFingerID(uint16_t id)
             deserializeJson(json, file);
 
             // Первичная проверка
-            if (json["methodFPID"] == json["fingerprintID"]) {
+            if (json["methodFPID"] == true && id == json["fingerprintID"]) {
                 break;
             }
 
@@ -573,27 +658,35 @@ bool Interface::checkFingerID(uint16_t id)
         }
     }
     else if (WiFi.isConnected()) {
-        int z = 1;                            // Счётчик для Web-database
+        int z = 1;                                // Счётчик для Web-database
         while (z < 10)
-        {
+        {   
             // Отправка запроса
-            http.connect("192.168.1.15", 8000);
-            http.println("GET /api/v1/database/users/detail/1 HTTP/1.1\r\nHost: 192.168.1.15:8000\r\n\r\n");
+            if (!http.connect(databaseURL.c_str(), 8000)) {
+                lcd.clear();
+                lcd.print("Fall to connect");
+                lcd.setCursor(0,1);
+                lcd.print("database");
+                delay(5000);
+                goHome();
+                return false;
+            }
+
+            http.printf("GET /api/v1/database/users/detail/%i HTTP/1.1\r\nHost: %s:8000\r\n\r\n", z, databaseURL.c_str());
             delay(200);
 
-            if (http.find("\r\n\r\n") && http.find("HTTP 200 OK")) {
+            if (http.find("\r\n\r\n")) {
                 deserializeJson(json, http);
 
                 // Первичная проверка
-                if (id == json["fingerprintID"]) {
+                if (json["methodFPID"] == true && id == json["fingerprintID"]) {
                     break;
                 }
             }
-
             z++;
         }
     }
-    else {                                    // Без локальной или сетевой базы данных продолжать попытки бесмысленно
+    else {                                        // Без локальной или сетевой базы данных продолжать попытки бесмысленно
         lcd.clear();
         lcd.print("Database is");
         lcd.setCursor(0, 1);
@@ -604,7 +697,7 @@ bool Interface::checkFingerID(uint16_t id)
 
     // Контрольная проверка, далее идёт работа на выбывание
     if (id != json["fingerprintID"]) {
-        accessDeny(false);
+        accessDeny();
         return false;
     }
 
@@ -618,7 +711,7 @@ bool Interface::checkFingerID(uint16_t id)
     int eHour = json["endTime"];
     eHour /= 100;
     if (!RTC.compare(sHour, sMin, eHour, eMin)) {
-        accessDeny(true);
+        accessDeny(json["id"], true);
         return false;
     }
 
@@ -632,7 +725,7 @@ bool Interface::checkFingerID(uint16_t id)
         String PIN = readPassword(true);
         String JPIN = json["pin"];
         if (PIN != JPIN) {
-            accessDeny(false);
+            accessDeny(json["id"], false);
             return false;
         }
     }
@@ -670,7 +763,7 @@ bool Interface::checkFingerID(uint16_t id)
         // Проверка
         for (int i = 0; i < 10; i++) {
             if (JRFID[i] != RFID[i]) {
-                accessDeny(false);
+                accessDeny(json["id"], false);
                 return false;
             }
         }

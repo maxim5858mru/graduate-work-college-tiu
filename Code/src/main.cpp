@@ -4,7 +4,6 @@
 #include <WiFiClient.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
-#include <ArduinoOTA.h>
 #include "../lib/EEPROM/EEPROM.h"
 #include "../lib/Clock/Clock.h"
 #include "../lib/Keypad/Keypad.h"
@@ -34,6 +33,13 @@ bool settings[8] = {
     true,                                         // Дверь №1
     true                                          // Дверь №2
 };
+byte delayTime = 30;                              // Время работы таймера автоматической отключения подсветки 
+byte openTime = 5;                                // Время ожидания открытия двери
+int databaseCap = 10;                             // Ёмкость базы данных
+String hostURL = "";                              // Название хоста для Web-сервера
+String databaseURL = "";                          // Адрес базы данных
+// String databaseLogin = "";
+// String databasePass = "";
 
 // Флаги состояния
 bool flags[3] = {
@@ -41,8 +47,6 @@ bool flags[3] = {
     false,                                        // MDNS
     false										  // SPIFFS
 };
-
-String host;
 
 EEPROM memory(0x50, 10000);                       // Память
 Keypad keypad(0x20, KB4x4);                       // Клавиатура
@@ -62,7 +66,7 @@ void setup()
 
     /* 2 этап - Псевдо-прерывание */
     setInterrupt();
-     writeLoadCent(60);
+    writeLoadCent(60);
 
     /* 3 этап - Настройка Wi-Fi */
     if (memory.status) {
@@ -86,11 +90,10 @@ void setup()
     {
         if (memory.status)                        // Включение MDNS
         {
-            host = memory.readString(10, 385);
-            if (!host.isEmpty() && MDNS.begin(host.c_str())) 
+            if (!hostURL.isEmpty() && MDNS.begin(hostURL.c_str())) 
             {
                 if (NeedSerial) {
-                    Serial.println("MDNS is enabled, the local address: http://" + String(host) + ".local/");
+                    Serial.println("MDNS is enabled, the local address: http://" + String(hostURL) + ".local/");
                 }
                 MDSNWorking = true;
             }
@@ -114,24 +117,10 @@ void setup()
     // Сброс дисплея
     lcd.noBacklight();
     Interface::goHome();
-
-    // Настройка перрывания для обновления по сети
-    ArduinoOTA.onStart([]{
-        String type;
-          if (ArduinoOTA.getCommand() == U_FLASH) {
-            type = "sketch";
-        }
-          else {
-            type = "filesystem";
-        }
-    });
-    ArduinoOTA.begin();
 }
 
 void loop()
 {
-    ArduinoOTA.handle();
-
     // Проверка расстояния 
     if (Interface::getDistance(15, 4) < 60 || timer.timerIsWorking())      // Для энергии на подсветке
     {
@@ -139,7 +128,7 @@ void loop()
         if (Interface::getDistance(15, 4) < 60) 
         {
             timer.timerCheckAndStop();
-            timer.timerStart(30);
+            timer.timerStart(delayTime);
         }
         
         lcd.backlight();
@@ -182,12 +171,22 @@ void loop()
 
         //Fingerprint
         uint16_t fingerID = fingerprint.read();
-        Serial.println(fingerID, HEX);
         if ((fingerID >= 1) && (fingerID <= 130)) {
             Interface::checkFingerID(fingerID);
         }
         else if (fingerID == 0xFF00) {
-            Interface::accessDeny(false);
+            int z = 1;
+            while ((fingerID == 0xFF00 || fingerID == 0xFFFF) && z < 10)
+            {
+                fingerID = fingerprint.read();
+                z++;
+            }
+            if ((fingerID >= 1) && (fingerID <= 130)) {
+                Interface::checkFingerID(fingerID);
+            }
+            else {
+                Interface::accessDeny();
+            }
         }
         else {
             delay(50);

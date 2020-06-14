@@ -43,6 +43,7 @@ class Logs(models.Model):
     type = models.IntegerField(verbose_name='Type of log entry', choices=LOG_TYPE)
     seconds = models.IntegerField(verbose_name='Seconds', null=True)
     minutes = models.IntegerField(verbose_name='Minutes', null=True)
+    hour = models.IntegerField(verbose_name='Hours', null=True)
     day = models.IntegerField(verbose_name='Day', null=True)
     month = models.IntegerField(verbose_name='Month', null=True)
     year = models.IntegerField(verbose_name='Year', null=True)
