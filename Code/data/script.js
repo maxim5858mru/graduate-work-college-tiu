@@ -1,15 +1,27 @@
-﻿function showMenu() {
-    if (navMenu.style.display == "block") {
-        navMenu.style.display = "none";
-        search.style.display = "none";
-        navButton.innerHTML = navButton.innerHTML.slice(0, navButton.innerHTML.indexOf("Меню")) + active.innerHTML.slice(active.innerHTML.indexOf("</i>")+4, active.innerHTML.indexOf("</a>"));
+﻿// Реализация переключение мобильного меню
+function showMenu() {
+    if (nav.style.display == "block") {
+        nav.style.display = "none";
+        navbutton.innerHTML = navbutton.innerHTML.slice(0, navbutton.innerHTML.indexOf("Меню")) + active.innerHTML.slice(active.innerHTML.indexOf("</i>")+4, active.innerHTML.indexOf("</a>"));
     }
     else {
-        navMenu.style.display = "block";
-        search.style.display = "block";
-        navButton.innerHTML = navButton.innerHTML.slice(0, navButton.innerHTML.indexOf("</button")+9)+"Меню";
+        nav.style.display = "block";
+        navbutton.innerHTML = navbutton.innerHTML.slice(0, navbutton.innerHTML.indexOf("</button")+9)+"Меню";
     }
 }
-window.onload = function ready(){
-    navButton.innerHTML = navButton.innerHTML.slice(0, navButton.innerHTML.indexOf("Меню")) + active.innerHTML.slice(active.innerHTML.indexOf("</i>")+4, active.innerHTML.indexOf("</a>"));
+
+// Установка в моообильной версии заголовка текущего раздела
+window.onload = function ready() {
+    navbutton.innerHTML = navbutton.innerHTML.slice(0, navbutton.innerHTML.indexOf("Меню")) + active.innerHTML.slice(active.innerHTML.indexOf("</i>")+4, active.innerHTML.indexOf("</a>"));
 };
+
+// Нормализация работы меню при перевороте экрана
+window.addEventListener('resize', function(){
+    if (document.body.clientWidth > 600) {
+        nav.style.display = "block";
+        navbutton.innerHTML = navbutton.innerHTML.slice(0, navbutton.innerHTML.indexOf("</button")+9)+"Меню";
+    }
+    else if (nav.style.display == "block") {
+        showMenu();
+    }
+});

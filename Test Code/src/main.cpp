@@ -1,120 +1,128 @@
 #include <Arduino.h>
-#include <soc/rtc_wdt.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <Adafruit_Fingerprint.h>
 
-// Выводы МК, к которым подключены реле, кнопки и пьезодинамик
-#define RELE0_PIN   25
-#define RELE1_PIN   26
-// #define BUTTON0_PIN 12
-#define BUTTON1_PIN 13
-#define TONE_PIN    27
+Adafruit_Fingerprint finger = Adafruit_Fingerprint(&Serial2);
 
-/* 
-Arduino 
-    A4 - SDA
-    A5 - SCL
-ESP32
-    D22 - SCL
-    D21 - SDA
-    D23 - MOSI
-    D19 - MISO
-    D18 - SCK
-    D5  - CS (для SD) 
-ESP8266
-    D1 - SCL
-    D2 - SDA
-STM32F1
-    B6 - SCL1
-    B7 - SDA1
-*/
+uint8_t getFingerprintID();
+int getFingerprintIDez();
 
-// extern int __bss_end;
-// extern void *__brkval;
-
-// // Функция, возвращающая количество свободного ОЗУ (RAM)
-// int memoryFree()
-// {
-//   int freeValue;
-//   if((int)__brkval == 0) {freeValue = ((int)&freeValue) - ((int)&__bss_end);}
-//   else {freeValue = ((int)&freeValue) - ((int)__brkval);}
-//   return freeValue;
-// }
-
-// int serialReadInt(String say)
-// {
-//   Serial.println(say);
-//   while(!Serial.available()) {}
-//   return Serial.readString().toInt();
-// }
-int i = 0;
-
-void open()
+void setup()  
 {
-  noInterrupts();                                 // Борьба с дребезгом 
-  delayMicroseconds(16383);
-  interrupts();
+  Serial.begin(9600);
+  while (!Serial);  // For Yun/Leo/Micro/Zero/...
+  delay(100);
+  Serial.println("\n\nAdafruit finger detect test");
 
-  Serial.println(i);
-  for (int y = 0; y < 200; y++) 
-  {
-    delayMicroseconds(1000);
+  // set the data rate for the sensor serial port
+  finger.begin(57600);
+  delay(5);
+  if (finger.verifyPassword()) {
+    Serial.println("Found fingerprint sensor!");
+  } else {
+    Serial.println("Did not find fingerprint sensor :(");
+    while (1) { delay(1); }
   }
-  for (int y = 0; y < 200; y++) 
-  {
-    delayMicroseconds(1000);
+
+  finger.getTemplateCount();
+
+    if (finger.templateCount == 0) {
+    Serial.print("Sensor doesn't contain any fingerprint data. Please run the 'enroll' example.");
+  } 
+  else {
+    Serial.println("Waiting for valid finger...");
+      Serial.print("Sensor contains "); Serial.print(finger.templateCount); Serial.println(" templates");
   }
-  i++;
-  Serial.println(i);
-  // // lcd.clear();
-  // // lcd.print("Open");
+}
+
+void loop()                     // run over and over again
+{
+  getFingerprintIDez();
+  delay(50);            //don't ned to run this at full speed.
+}
+
+uint8_t getFingerprintID() 
+{
+  uint8_t p = finger.getImage();
+  switch (p) {
+    case FINGERPRINT_OK:
+      Serial.println("Image taken");
+      break;
+    case FINGERPRINT_NOFINGER:
+      Serial.println("No finger detected");
+      return p;
+    case FINGERPRINT_PACKETRECIEVEERR:
+      Serial.println("Communication error");
+      return p;
+    case FINGERPRINT_IMAGEFAIL:
+      Serial.println("Imaging error");
+      return p;
+    default:
+      Serial.println("Unknown error");
+      return p;
+  }
+
+  // OK success!
+
+  p = finger.image2Tz();
+  switch (p) {
+    case FINGERPRINT_OK:
+      Serial.println("Image converted");
+      break;
+    case FINGERPRINT_IMAGEMESS:
+      Serial.println("Image too messy");
+      return p;
+    case FINGERPRINT_PACKETRECIEVEERR:
+      Serial.println("Communication error");
+      return p;
+    case FINGERPRINT_FEATUREFAIL:
+      Serial.println("Could not find fingerprint features");
+      return p;
+    case FINGERPRINT_INVALIDIMAGE:
+      Serial.println("Could not find fingerprint features");
+      return p;
+    default:
+      Serial.println("Unknown error");
+      return p;
+  }
   
-  // // if (digitalRead(BUTTON0_PIN) == HIGH) {digitalWrite(RELE0_PIN, LOW);}
-  // digitalWrite(RELE1_PIN, LOW);
+  // OK converted!
+  p = finger.fingerFastSearch();
+  if (p == FINGERPRINT_OK) {
+    Serial.println("Found a print match!");
+  } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
+    Serial.println("Communication error");
+    return p;
+  } else if (p == FINGERPRINT_NOTFOUND) {
+    Serial.println("Did not find a match");
+    return p;
+  } else {
+    Serial.println("Unknown error");
+    return p;
+  }   
+  
+  // found a match!
+  Serial.print("Found ID #"); Serial.print(finger.fingerID); 
+  Serial.print(" with confidence of "); Serial.println(finger.confidence); 
 
-  // ledcAttachPin(TONE_PIN, 0);                     // Включаем пьезодинамик
-  // for (int i = 0; i < 5000; i++) 
-  // {
-  //   delayMicroseconds(100);
-  //   rtc_wdt_feed();
-  // }
-  // ledcDetachPin(TONE_PIN);
-
-  // // digitalWrite(RELE0_PIN, HIGH);                   // Закрытие двери
-  // digitalWrite(RELE1_PIN, HIGH);   
-
-  // // Interface::goHome();
-  // // rtc_wdt_enable();
-  // // rtc_wdt_protect_on();
-  // // attachInterrupt(digitalPinToInterrupt(BUTTON0_PIN), open, RISING);       
-  // // attachInterrupt(digitalPinToInterrupt(BUTTON1_PIN), open, RISING);
+  return finger.fingerID;
 }
 
-void setup() 
+// returns -1 if failed, otherwise returns ID #
+int getFingerprintIDez() 
 {
-  Serial.begin(115200);
+  uint8_t p = finger.getImage();
+  if (p != FINGERPRINT_OK)  return -1;
 
-  // while (!Serial) {}
-  // pinMode(13, INPUT_PULLDOWN);
-  // pinMode(14, INPUT_PULLDOWN);
+  p = finger.image2Tz();
+  if (p != FINGERPRINT_OK)  return -1;
 
-  // rtc_wdt_protect_off();
-  // rtc_wdt_disable();
-  // rtc_wdt_set_length_of_reset_signal(RTC_WDT_SYS_RESET_SIG, RTC_WDT_LENGTH_3_2us);
-  // rtc_wdt_set_stage(RTC_WDT_STAGE0, RTC_WDT_STAGE_ACTION_OFF);
-  // rtc_wdt_set_time(RTC_WDT_STAGE0, 7000);
-  // rtc_wdt_enable();
-  // rtc_wdt_protect_on();
-  if (rtc_wdt_is_on()) {Serial.println("WDT's working.");}
-  else {Serial.println("WDT is not working.");}
-
-  pinMode(BUTTON1_PIN, INPUT);
-  pinMode(RELE1_PIN, OUTPUT);
-  digitalWrite(RELE1_PIN, HIGH);       
-  attachInterrupt(digitalPinToInterrupt(BUTTON1_PIN), open, FALLING);
-}
-
-void loop() 
-{
-  // Serial.println(analogRead(13));
-  // Serial.println(analogRead(14));
-  // Serial.println("\n");
+  p = finger.fingerFastSearch();
+  if (p != FINGERPRINT_OK)  return -1;
+  
+  // found a match!
+  Serial.print("Found ID #"); Serial.print(finger.fingerID); 
+  Serial.print(" with confidence of "); Serial.println(finger.confidence);
+  return finger.fingerID; 
 }

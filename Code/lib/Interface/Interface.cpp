@@ -1,59 +1,43 @@
-#include <Arduino.h>
-#include <SD.h>
-#include <ArduinoJson.h>
-#include <Adafruit_Fingerprint.h>
-#include <LiquidCrystal_I2C.h>
-#include <MFRC522.h>
-#include "../IIC/IIC.h"
-#include "../Timer/Timer.h"
 #include "Interface.h"
-#define RELE0_PIN 26
-#define RELE1_PIN 25
-#define TONE_PIN  27
 
-extern Keypad keypad;
-extern LiquidCrystal_I2C lcd;
-extern MFRC522 rfid;
-extern Clock RTC;
-
-/** Измерение растояния до объекта, с помощью ультразвукового датчика
+/** Измерение расстояния до объекта, с помощью ультразвукового датчика
  * @warning желательно чтобы объект меньше поглощал звуков
  * @param trig - пин для отправки сигнала активации
  * @param echo - пин для приёма ШИМ сигнала от датчика
- * @return примерное растояние до объекта
+ * @return примерное расстояние до объекта
  */
 long Interface::getDistance(uint8_t trig, uint8_t echo)
 {
-  long duration, cm;
+    long duration, cm;
 
-  pinMode(trig, OUTPUT);
-  pinMode(echo, INPUT);
+    pinMode(trig, OUTPUT);
+    pinMode(echo, INPUT);
 
-  digitalWrite(trig, LOW);
-  delayMicroseconds(5);
-  digitalWrite(trig, HIGH);
+    digitalWrite(trig, LOW);
+    delayMicroseconds(5);
+    digitalWrite(trig, HIGH);
 
-  // Выставив высокий уровень сигнала, ждем около 10 микросекунд. В этот момент датчик будет посылать сигналы с частотой 40 КГц.
-  delayMicroseconds(10);
-  digitalWrite(trig, LOW);
+    // Выставив высокий уровень сигнала, ждем около 10 микросекунд. В этот момент датчик будет посылать сигналы с частотой 40 КГц.
+    delayMicroseconds(10);
+    digitalWrite(trig, LOW);
 
-  //  Время задержки акустического сигнала на эхолокаторе.
-  duration = pulseIn(echo, HIGH);
+    //  Время задержки акустического сигнала на эхолокаторе.
+    duration = pulseIn(echo, HIGH);
 
-  // Теперь осталось преобразовать время в расстояние
-  cm = (duration / 2) / 29.1;
+    // Теперь осталось преобразовать время в расстояние
+    cm = (duration / 2) / 29.1;
 
-  // Задержка между измерениями для корректной работы скеча
-  delay(250);
-  return cm;
+    // Задержка между измерениями для корректной работы скетча
+    delay(250);
+    return cm;
 }
 
 // Сброс экрана
 void Interface::goHome()
-{          
-  lcd.clear();
-  lcd.setCursor(4, 0);
-  lcd.print("Good Day");
+{
+    lcd.clear();
+    lcd.setCursor(4, 0);
+    lcd.print("Good Day");
 }
 
 /** Открытие двери
@@ -61,35 +45,105 @@ void Interface::goHome()
  */
 void Interface::open(uint8_t door)
 {
-  int pin = -1;                                   // Оперделение номе вывода МК для реле
-  if (door == 0) {pin = RELE0_PIN;}
-  else if (door == 1) {pin = RELE1_PIN;}
+    int pin;                                      // Оперделение номе вывода МК для реле
+    switch (door)
+    {
+    case 0:
+        pin = 25;
+        break;
+    default:
+        pin = 26;
+        break;
+    }
 
-  lcd.clear();                                    // Вывод информации на дисплей
-  lcd.backlight();
-  lcd.print("Open");
-  
-  if (door != -1) {digitalWrite(pin, LOW);}       // Открытие двери
-  ledcAttachPin(TONE_PIN, 0);                     // Включаем пьезодинамик
-  delay(5000);
-  ledcDetachPin(TONE_PIN);
-  if (door != -1) {digitalWrite(pin, HIGH);}      // Закрытие двери
+    lcd.clear();                                  // Вывод информации на дисплей
+    lcd.backlight();
+    lcd.print("Open");
 
-  goHome();                                       // Сброс дисплея
-  if (getDistance(15, 4) > 60) {lcd.noBacklight();}
+    digitalWrite(pin, LOW);                       // Открытие двери
+    ledcAttachPin(TONE_PIN, 0);                   // Включаем пьезодинамик
+    delay(openTime * 100);
+    ledcDetachPin(TONE_PIN);
+    digitalWrite(pin, HIGH);                      // Закрытие двери
+
+    goHome();                                     // Сброс дисплея
+    if (getDistance(15, 4) > 60) {
+        lcd.noBacklight();
+    }
+}
+
+// Отказ в доступе
+void Interface::accessDeny()
+{
+    lcd.clear();
+    lcd.print("Access Deny");
+    delay(2000);
+
+    if (WiFi.isConnected() && http.connect(databaseURL.c_str(), 8000)) {
+        DynamicJsonDocument doc(500);
+        doc["type"] = 2;
+        doc["seconds"] = second();
+        doc["minutes"] = minute();
+        doc["hour"] = hour();
+        doc["day"] = day();
+        doc["month"] = month();
+        doc["year"] = year();
+        doc["door"] = 0;
+        doc["userID"] = 0;
+        doc["user"] = 1;
+        
+        http.println("POST /api/v1/database/logs/create HTTP/1.1");
+        http.println("Host: " + databaseURL + ":8000");
+        http.println("Content-Type: application/json");
+        http.print("Content-Length: ");
+        http.println(measureJson(doc));
+        http.println("Connection: close\r\n");
+        serializeJson(doc, http);
+        http.readString();
+        http.stop();
+    }
+    goHome();
 }
 
 /** Отказ в доступе
- * @param - причиной отказа является время?
+ * @param id - номер записи пользователя
+ * @param byTime - причиной отказа является время?
  */
-void Interface::accessDeny(bool byTime)
+void Interface::accessDeny(int id, bool byTime)
 {
-  lcd.clear();
-  if (byTime) {lcd.print("Wrong Time");}
-  else {lcd.print("Access Deny");}
-  delay(2000);
+    lcd.clear();
+    if (byTime) {
+        lcd.print("Wrong Time");
+    }
+    else {
+        lcd.print("Access Deny");
+    }
+    delay(2000);
 
-  goHome();
+    if (WiFi.isConnected() && http.connect(databaseURL.c_str(), 8000)) {
+        DynamicJsonDocument doc(500);
+        doc["type"] = byTime?4:3;
+        doc["seconds"] = second();
+        doc["minutes"] = minute();
+        doc["hour"] = hour();
+        doc["day"] = day();
+        doc["month"] = month();
+        doc["year"] = year();
+        doc["door"] = 0;
+        doc["userID"] = id;
+        doc["user"] = 1;
+        
+        http.println("POST /api/v1/database/logs/create HTTP/1.1");
+        http.println("Host: " + databaseURL + ":8000");
+        http.println("Content-Type: application/json");
+        http.print("Content-Length: ");
+        http.println(measureJson(doc));
+        http.println("Connection: close\r\n");
+        serializeJson(doc, http);
+        http.readString();
+        http.stop();
+    }
+    goHome();
 }
 
 /** Вывод пароля (точнее его изменения) на дисплей
@@ -98,20 +152,18 @@ void Interface::accessDeny(bool byTime)
  */
 void Interface::showPassword(String password, bool becomeMore)
 {
-  if (becomeMore)
-  {
-    lcd.setCursor(password.length() - 1, 1);
-    lcd.print(password[password.length() - 1]);
-    delay(250);
+    if (becomeMore) {
+        lcd.setCursor(password.length() - 1, 1);
+        lcd.print(password[password.length() - 1]);
+        delay(250);
 
-    lcd.setCursor(password.length() - 1, 1);
-    lcd.print("*");
-  }
-  else
-  {
-    lcd.setCursor(password.length(), 1);
-    lcd.print(" ");
-  }
+        lcd.setCursor(password.length() - 1, 1);
+        lcd.print("*");
+    }
+    else {
+        lcd.setCursor(password.length(), 1);
+        lcd.print(" ");
+    }
 }
 
 /** Считывание пароля
@@ -120,63 +172,62 @@ void Interface::showPassword(String password, bool becomeMore)
  */
 String Interface::readPassword(bool nextAuth)
 {
-  String password;
+    String password;
 
-  lcd.clear();
-  lcd.print("PIN");
+    lcd.clear();
+    lcd.print("PIN");
 
-  // Ввод кода
-  while (nextAuth)                                // Нужно получить первую цифру от пользователя, чтобы следующий цикл работал
-  {
-    keypad.read();
-    if (keypad.state == ON_PRESS) 
-    {
-      if (keypad.Numb == 10  || keypad.Numb == 11 || keypad.Numb == 12 || keypad.Numb == 13 || keypad.Numb == 14 || keypad.Numb == 15) {return "";}
-      else {break;}
+    // Ввод кода
+    while (nextAuth) {                            // Нужно получить первую цифру от пользователя, чтобы следующий цикл работал
+        keypad.read();
+        if (keypad.state == ON_PRESS) {
+            if (keypad.Numb == 10 || keypad.Numb == 11 || keypad.Numb == 12 || keypad.Numb == 13 || keypad.Numb == 14 || keypad.Numb == 15) {
+                return "";
+            }
+            else {
+                break;
+            }
+        }
     }
-  }
-  password = keypad.Char;
-  Interface::showPassword(password, true);
+    password = keypad.Char;
+    Interface::showPassword(password, true);
 
-  while (password.length() > 0 && password.length() < 16)      // Режим ввода ПИН-кода будет, пока пользователь не введёт или сбросит пароль
-  {
-    keypad.read();                                // Получение нового значения, прошлое уже записано ранее
-    if (keypad.state == ON_PRESS) 
-    {
-      switch (keypad.Numb)
-      {
-        // ПИН-код может состоять только из чисел
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-          password += keypad.Char;
-          Interface::showPassword(password, true);
-          break;
-        // Кнопка * - удаляет символ
-        case 14:
-          password.remove(password.length() - 1);  
-          Interface::showPassword(password, false);  
-          break;
-        // Кнопка # - окончание ввода пароля
-        case 15:
-          return password; 
-          break;                                  // На Хабре уже была статья на этот счёт. Так что break лучше ставить после каждого case
-        // A B C D - сбрассывают пароль   
-        default:
-          return "";
-          break;
-      }
+    while (password.length() > 0 && password.length() < 16) {              // Режим ввода ПИН-кода будет, пока пользователь не введёт или сбросит пароль
+        keypad.read(); // Получение нового значения, прошлое уже записано ранее
+        if (keypad.state == ON_PRESS) {
+            switch (keypad.Numb) {
+            // ПИН-код может состоять только из чисел
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+                password += keypad.Char;
+                Interface::showPassword(password, true);
+                break;
+            // Кнопка * - удаляет символ
+            case 14:
+                password.remove(password.length() - 1);
+                Interface::showPassword(password, false);
+                break;
+            // Кнопка # - окончание ввода пароля
+            case 15:
+                return password;
+                break; // На Хабре уже была статья на этот счёт. Так что break лучше ставить после каждого case
+            // A B C D - сбрасывают пароль
+            default:
+                return "";
+                break;
+            }
+        }
     }
-  }
 
-  return password;
+    return password;
 }
 
 /** Проверка пароля
@@ -187,65 +238,169 @@ String Interface::readPassword(bool nextAuth)
  */
 bool Interface::checkPassword(String password)
 {
-  if (password.length() == 0) {goHome();}
-  else
-  {
-    // Открытие папки с записями базы данных
-    File folder = SD.open("/Database");
-    if(!folder || !folder.isDirectory())
-    {
-      // !!!!! Скачиваем базу данных
+    if (password.length() == 0) {
+        goHome();
     }
+    else {
+        DynamicJsonDocument json(550);
 
-    // Перебор записей. К сожалению, всю базу не запихнуть в буффер, по этому перебор записей пользователей
-    File file = folder.openNextFile();
-    while(file)
-    {
-      DynamicJsonDocument json(600);              // Буффер для файла
-      deserializeJson(json, file);
+        File folder;
+        File file;
+        
+        if (SDWorking) {
+            // Открытие папки с записями базы данных
+            folder = SD.open("/Database");
 
-      // Объявление переменных для файла
-      JsonArray JMethod = json["Method"];
-      if(JMethod[0])                              // Массив флагов методов авторизации, которыми должен воспользоваться пользователь
-      { 
-        if (password != json["PIN"]) {file = folder.openNextFile();}
-        else {break;}
-      }
+            // Перебор записей. К сожалению, всю базу не запихнуть в буфер, по этому перебор записей пользователей
+            file = folder.openNextFile();
+            if (!file) {                          // Если файлов нет, сразу уведомляем об этом
+                lcd.clear();
+                lcd.print("Database is");
+                lcd.setCursor(0, 1);
+                lcd.print("empty");
+                delay(5000);
+                return false;
+            }
 
-      //  Проверка на время
-      int sMin = json["Start Time"];
-      sMin %= 100;
-      int sHour = json["Start Time"];
-      sHour /= 100;
-      int eMin = json["End Time"];
-      eMin %= 100;
-      int eHour = json["End Time"];
-      eHour /= 100;
-      if (!RTC.compare(sHour, sMin, eHour, eMin)) 
-      {
-        accessDeny(true);
-        return false;
-      }
+            while (file)
+            {
+                deserializeJson(json, file);
 
-      if (JMethod[1])                             // Fingerprint
-      {
-        lcd.clear();
-        lcd.println("Put your finger");
-      }
+                // Первичная проверка
+                if (json["methodPIN"]) {
+                    String JPIN = json["pin"];
+                    if (password == JPIN) {
+                        break;
+                    }
+                }
 
-      if (JMethod[2])                             // RFID
-      {
-        lcd.clear();
-        lcd.println("Attach your pass");
-      }
+                file = folder.openNextFile();
+            }
+        }
+        else if (WiFi.isConnected()) {
+            int z = 1;                            // Счётчик для Web-database
+            while (z < 10)
+            {
+                // Отправка запроса
+                if (!http.connect(databaseURL.c_str(), 8000)) {
+                    lcd.clear();
+                    lcd.print("Fall to connect");
+                    lcd.setCursor(0,1);
+                    lcd.print("database");
+                    delay(5000);
+                    goHome();
+                    return false;
+                }
 
-      open(json["Door"]);                         // Открытие двери
-      return true;
+                http.printf("GET /api/v1/database/users/detail/%i HTTP/1.1\r\nHost: %s:8000\r\n\r\n", z, databaseURL.c_str());
+                delay(200);
+
+                if (http.find("\r\n\r\n")) {
+                    deserializeJson(json, http);
+
+                    if (json["methodPIN"]) {
+                        String JPIN = json["pin"];
+                        if (password == JPIN) {
+                            break;
+                        }
+                    }
+                }
+
+                z++;
+            }
+        }
+        else {                                    // Без локальной или сетевой базы данных продолжать попытки бесмысленно
+            lcd.clear();
+            lcd.print("Database is");
+            lcd.setCursor(0, 1);
+            lcd.print("empty");
+            delay(5000);
+            return false;
+        }
+
+        // Контрольная проверка, далее идёт работа на выбывание
+        String JPIN = json["pin"];
+        if (!json["methodPIN"] || password != JPIN) {
+            accessDeny();
+            return false;
+        }
+
+        //  Проверка на время
+        int sMin = json["startTime"];
+        sMin %= 100;
+        int sHour = json["startTime"];
+        sHour /= 100;
+        int eMin = json["endTime"];
+        eMin %= 100;
+        int eHour = json["endTime"];
+        eHour /= 100;
+        if (!RTC.compare(sHour, sMin, eHour, eMin)) {
+            accessDeny(json["id"], true);
+            return false;
+        }
+
+        // Дополнительные проверки
+
+        // RFID
+        if (json["methodRFID"]) {
+            lcd.clear();
+            lcd.print("Attach your pass");
+
+            // Импорт массива
+            byte JRFID[10] = {
+                json["rfid1"], 
+                json["rfid2"], 
+                json["rfid3"], 
+                json["rfid4"],                        
+                json["rfid5"], 
+                json["rfid6"], 
+                json["rfid7"], 
+                json["rfid8"],
+                json["rfid9"], 
+                json["rfid10"]
+            };
+
+            // Получение значения от RFID
+            while (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) {}
+            byte RFID[10];
+            for (int i = 0; i < 10; i++) {
+                RFID[i] = rfid.uid.uidByte[i];
+            }
+
+            rfid.PICC_HaltA();
+            rfid.PCD_StopCrypto1();
+            delay(100);
+            
+            // Проверка
+            for (int i = 0; i < 10; i++) {
+                if (JRFID[i] != RFID[i]) {
+                    accessDeny(json["id"], false);
+                    return false;
+                }
+            }
+        }
+
+        // Fingerprint
+        if (json["methodFPID"]) {                 
+            uint16_t tempID = 0xFFFF;             // Переменная для хранения ID отпечатка
+
+            lcd.clear();
+            lcd.print("Put your finger");
+
+            while (tempID == 0xFFFF) {            // Ожидание отпечатка пальца
+                tempID = fingerprint.read();
+                delay(50);
+            }
+
+            if (tempID == 0xFF00 || tempID != json["fingerprintID"]) {     // Неправильный отпечаток
+                accessDeny(json["id"], false);
+                return false;
+            }
+        }
+
+        open(json["door"]); // Открытие двери
+        return true;
     }
-
-    accessDeny(false);                            // Отказ, если PIN не найден в базе
-    return false;
-  }
 }
 
 /** Получение и проверка NUID карты RFID
@@ -255,7 +410,7 @@ bool Interface::checkPassword(String password)
  * это не папка или она вообще не существует -> скачивай базу данных
  * открой следующий в папке (первый) файл
  * цикл перебора файлов
- *   буффер и переменные JSON
+ *   буфер и переменные JSON
  *   в записи нет RFID авторизации -> новый файл
  *     не прошёл проверку массива NUID -> открой новый файл и continue
  *     не попал по времени -> вывод ошибки по времени и return
@@ -265,81 +420,355 @@ bool Interface::checkPassword(String password)
  */
 bool Interface::checkAndGetRFID()
 {
-  byte RFID[10];
-  for (int i = 0; i < 10; i++) {RFID[i] = rfid.uid.uidByte[i];}
+    DynamicJsonDocument json(550);
 
-  rfid.PICC_HaltA();
-  rfid.PCD_StopCrypto1();
-  delay(100);
+    File folder;
+    File file;
 
-  // Открытие папки базы данных, точнее папки с её записями
-  File folder = SD.open("/Database");
-  if(!folder || !folder.isDirectory()){           // На случай если папку удалят, либо если карта памяти умрёт
-    // !!!!! Скачиваем базу данных
-  }
+    // Получение данных
+    byte RFID[10];
+    for (int i = 0; i < 10; i++) {
+        RFID[i] = rfid.uid.uidByte[i];
+    }
 
-  // Перебор записей. К сожалению, всю базу не запихнуть в буффер, по этому перебор записей пользователей
-  File file = folder.openNextFile();
-  while(file)
-  {
-    DynamicJsonDocument json(600);                // Буффер для файла. Благодаря ему я использую этот тупой костыль-метод
-    deserializeJson(json, file);
+    rfid.PICC_HaltA();
+    rfid.PCD_StopCrypto1();
+    
+    if (SDWorking) {
+        // Открытие папки с записями базы данных
+        folder = SD.open("/Database");
 
-    // Объявление переменных для файла
-    JsonArray JMethod = json["Method"];
-    if(JMethod[2])                                // Массив Method указывает, какими методами авторизации должен воспользоваться пользователь
-    {
-      bool result = true;
-      JsonArray JRFID = json["RFID"];             // NUID RFID карты состоит из 10 байтов
-
-      for(int i = 0; i < 10; i++)
-      {
-        if(JRFID[i] != RFID[i])
-        {
-          file = folder.openNextFile();           // Каждая запись пользователя в отдельном файле, спасибо буффер...
-          result = false;
-          break;
+        // Перебор записей. К сожалению, всю базу не запихнуть в буфер, по этому перебор записей пользователей
+        file = folder.openNextFile();
+        if (!file) {                          // Если файлов нет, сразу уведомляем об этом
+            lcd.clear();
+            lcd.print("Database is");
+            lcd.setCursor(0, 1);
+            lcd.print("empty");
+            delay(5000);
+            goHome();
+            return false;
         }
-      }
 
-      if (!result) {continue;}                    // Костыль для реализации break label цикла перебора
+        while (file)
+        {
+            deserializeJson(json, file);
 
-      //  Проверка на время, но тут в случае ошибки accessDeny
-      int sMin = json["Start Time"];
-      sMin %= 100;
-      int sHour = json["Start Time"];
-      sHour /= 100;
-      int eMin = json["End Time"];
-      eMin %= 100;
-      int eHour = json["End Time"];
-      eHour /= 100;
-      if (!RTC.compare(sHour, sMin, eHour, eMin)) 
-      {
-        accessDeny(true);
+            // Первичная проверка
+            if (json["methodRFID"]) {
+                bool goWhile = true;
+
+                // Импорт массива
+                byte JRFID[10] = {
+                    json["rfid1"], 
+                    json["rfid2"], 
+                    json["rfid3"], 
+                    json["rfid4"],                        
+                    json["rfid5"], 
+                    json["rfid6"], 
+                    json["rfid7"], 
+                    json["rfid8"],
+                    json["rfid9"], 
+                    json["rfid10"]
+                };
+
+                for (int i = 0; i < 10; i++) {
+                    if (JRFID[i] != RFID[i]) {
+                        goWhile = false;
+                    }
+                }
+
+                if (goWhile) {
+                    break;
+                }
+            }
+
+            file = folder.openNextFile();
+        }
+    }
+    else if (WiFi.isConnected()) {
+        int z = 1;                                // Счётчик для Web-database
+        while (z < 10)
+        {
+            // Отправка запроса
+            if (!http.connect(databaseURL.c_str(), 8000)) {
+                lcd.clear();
+                lcd.print("Fall to connect");
+                lcd.setCursor(0,1);
+                lcd.print("database");
+                delay(5000);
+                goHome();
+                return false;
+            }
+            http.printf("GET /api/v1/database/users/detail/%i HTTP/1.1\r\nHost: %s:8000\r\n\r\n", z, databaseURL.c_str());
+            delay(200);
+
+            if (http.find("\r\n\r\n")) {
+                deserializeJson(json, http);
+
+                if (json["methodRFID"]) {
+                    bool goWhile = true;         // Флаг для реализации выхода из цикла перебора записей
+                    byte JRFID[10] = {
+                        json["rfid1"], 
+                        json["rfid2"], 
+                        json["rfid3"], 
+                        json["rfid4"],                        
+                        json["rfid5"], 
+                        json["rfid6"], 
+                        json["rfid7"], 
+                        json["rfid8"],
+                        json["rfid9"], 
+                        json["rfid10"]
+                    };
+
+                    for (int i = 0; i < 10; i++) {
+                        if (JRFID[i] != RFID[i]) {
+                            goWhile = false;
+                            break;
+                        }
+                    }
+
+                    if (goWhile) {
+                        break;
+                    }
+
+                }
+            }
+
+            z++;
+        }
+    }
+    else {                                        // Без локальной или сетевой базы данных продолжать попытки бесмысленно
+        lcd.clear();
+        lcd.print("Database is");
+        lcd.setCursor(0, 1);
+        lcd.print("empty");
+        delay(5000);
         return false;
-      }
+    }
 
-      // Проверка на доп. требования
-      if (JMethod[0])                             // PIN
-      {
-        String password = readPassword(true);
-        if (password != json["PIN"]) 
-        {
-          accessDeny(false);
-          return false;
+    // Контрольная проверка, далее идёт работа на выбывание
+    byte JRFID[10] = {
+        json["rfid1"], 
+        json["rfid2"], 
+        json["rfid3"], 
+        json["rfid4"],                        
+        json["rfid5"], 
+        json["rfid6"], 
+        json["rfid7"], 
+        json["rfid8"],
+        json["rfid9"], 
+        json["rfid10"]
+    };
+
+    for (int i = 0; i < 10; i++) {
+        if (JRFID[i] != RFID[i]) {
+            accessDeny();
+            return false;
         }
-      }
-      // if (JMethod[1])                             // Fingerprint
-      // {
+    }
 
-      // }
+    //  Проверка на время
+    int sMin = json["startTime"];
+    sMin %= 100;
+    int sHour = json["startTime"];
+    sHour /= 100;
+    int eMin = json["endTime"];
+    eMin %= 100;
+    int eHour = json["endTime"];
+    eHour /= 100;
+    if (!RTC.compare(sHour, sMin, eHour, eMin)) {
+        accessDeny(json["id"], true);
+        return false;
+    }
 
-      open(json["Door"]);
-      return true;
-    }  
-    else {file = folder.openNextFile(); }         
-  }
+    // Дополнительные проверки
 
-  accessDeny(false);
-  return false;
+    // PIN
+    if (json["methodPIN"]) {
+        lcd.clear();
+        lcd.print("Enter your PIN");
+
+        String PIN = readPassword(true);
+        String JPIN = json["pin"];
+        if (PIN != JPIN) {
+            accessDeny(json["id"], false);
+            return false;
+        }
+    }
+
+    // Fingerprint
+    if (json["methodFPID"]) {                 
+        uint16_t tempID = 0xFFFF;                 // Переменная для хранения ID отпечатка
+
+        lcd.clear();
+        lcd.print("Put your finger");
+
+        while (tempID == 0xFFFF) {                // Ожидание отпечатка пальца
+            tempID = fingerprint.read();
+            delay(50);
+        }
+
+        if (tempID == 0xFF00 || tempID != json["fingerprintID"]) {         // Неправильный отпечаток
+            accessDeny(json["id"], false);
+            return false;
+        }
+    }
+
+    open(json["door"]);                           // Открытие двери
+    return true;
+}
+
+/** Проверка ID скана отпечатка
+ * @param id - для передачи функции уже считаного значения
+ * @return !!!!!Учитывая что открытие двери просходит внутри функции, для чего возратное значение не знаю
+ */
+bool Interface::checkFingerID(uint16_t id)
+{
+    DynamicJsonDocument json(550);
+
+    File folder;
+    File file;
+    
+    if (SDWorking) {
+        // Открытие папки с записями базы данных
+        folder = SD.open("/Database");
+
+        // Перебор записей. К сожалению, всю базу не запихнуть в буфер, по этому перебор записей пользователей
+        file = folder.openNextFile();
+        if (!file) {                              // Если файлов нет, сразу уведомляем об этом
+            lcd.clear();
+            lcd.print("Database is");
+            lcd.setCursor(0, 1);
+            lcd.print("empty");
+            delay(5000);
+            return false;
+        }
+
+        while (file)
+        {
+            deserializeJson(json, file);
+
+            // Первичная проверка
+            if (json["methodFPID"] == true && id == json["fingerprintID"]) {
+                break;
+            }
+
+            file = folder.openNextFile();
+        }
+    }
+    else if (WiFi.isConnected()) {
+        int z = 1;                                // Счётчик для Web-database
+        while (z < 10)
+        {   
+            // Отправка запроса
+            if (!http.connect(databaseURL.c_str(), 8000)) {
+                lcd.clear();
+                lcd.print("Fall to connect");
+                lcd.setCursor(0,1);
+                lcd.print("database");
+                delay(5000);
+                goHome();
+                return false;
+            }
+
+            http.printf("GET /api/v1/database/users/detail/%i HTTP/1.1\r\nHost: %s:8000\r\n\r\n", z, databaseURL.c_str());
+            delay(200);
+
+            if (http.find("\r\n\r\n")) {
+                deserializeJson(json, http);
+
+                // Первичная проверка
+                if (json["methodFPID"] == true && id == json["fingerprintID"]) {
+                    break;
+                }
+            }
+            z++;
+        }
+    }
+    else {                                        // Без локальной или сетевой базы данных продолжать попытки бесмысленно
+        lcd.clear();
+        lcd.print("Database is");
+        lcd.setCursor(0, 1);
+        lcd.print("empty");
+        delay(5000);
+        return false;
+    }
+
+    // Контрольная проверка, далее идёт работа на выбывание
+    if (id != json["fingerprintID"]) {
+        accessDeny();
+        return false;
+    }
+
+    //  Проверка на время
+    int sMin = json["startTime"];
+    sMin %= 100;
+    int sHour = json["startTime"];
+    sHour /= 100;
+    int eMin = json["endTime"];
+    eMin %= 100;
+    int eHour = json["endTime"];
+    eHour /= 100;
+    if (!RTC.compare(sHour, sMin, eHour, eMin)) {
+        accessDeny(json["id"], true);
+        return false;
+    }
+
+    // Дополнительные проверки
+
+    // PIN
+    if (json["methodPIN"]) {
+        lcd.clear();
+        lcd.print("Enter your PIN");
+
+        String PIN = readPassword(true);
+        String JPIN = json["pin"];
+        if (PIN != JPIN) {
+            accessDeny(json["id"], false);
+            return false;
+        }
+    }
+
+    // RFID
+    if (json["methodRFID"]) {
+        lcd.clear();
+        lcd.print("Attach your pass");
+
+        // Импорт массива
+        byte JRFID[10] = {
+            json["rfid1"], 
+            json["rfid2"], 
+            json["rfid3"], 
+            json["rfid4"],                        
+            json["rfid5"], 
+            json["rfid6"], 
+            json["rfid7"], 
+            json["rfid8"],
+            json["rfid9"], 
+            json["rfid10"]
+        };
+
+        // Получение значения от RFID
+        while (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) {}
+        byte RFID[10];
+        for (int i = 0; i < 10; i++) {
+            RFID[i] = rfid.uid.uidByte[i];
+        }
+
+        rfid.PICC_HaltA();
+        rfid.PCD_StopCrypto1();
+        delay(100);
+        
+        // Проверка
+        for (int i = 0; i < 10; i++) {
+            if (JRFID[i] != RFID[i]) {
+                accessDeny(json["id"], false);
+                return false;
+            }
+        }
+    }
+
+    open(json["door"]); // Открытие двери
+    return true;
 }

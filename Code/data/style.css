@@ -1,17 +1,35 @@
-*{
+* {
     padding: 0;
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
 }
-body.NotFound, html.NotFound{
-    background: white;
+a {
+    text-decoration: none;
     color: white;
-    height: 100%;
-    width: 100%;
-    display: flex;
-    align-items: center;
 }
-a.NotFound, li, header label{
+h1, h2, h3, h4, h5, h6
+{
+    font-weight: normal;
+}
+.red{
+    color:red;
+}
+.green{
+    color:green;
+}
+.fas {
+    margin-right: 4px;
+}
+
+/* Стили навигационной панели */
+header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    margin: 2% 0%;
+}
+header label {
+    color: white;
     background: black;
     padding: 15px;
     border-radius: 10px;
@@ -19,58 +37,126 @@ a.NotFound, li, header label{
     transition: 0.2s;
     border: 2px white solid;
 }
-nav a,a.NotFound{
-    text-decoration: none;
-}
-nav a, a.NotFound, header label, label#search input{
-    color: white;
-}
-label#search{
-    cursor: auto;
-}
-a.NotFound:hover, li:hover, label#search:hover{
-    border: 2px grey solid;
-    background: white;
-}
-a.NotFound:hover, li:hover a, label#search:hover, label#search:hover input{
-    color: black;
-}
-li#active:hover a{
-    color:white;
-}
-input[type=search]{
-    background: none;
-    border: none;
-}
-input[type=search]:focus, header button{
-    outline: none;
-}
-li#active{
-    background: grey;
-    color: white;
-    border: black 2px solid;
-}
-li#active:hover{
-    border-color: grey;
-}
-input[type=search]{
-    cursor: auto;
-}
-header{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    margin-top: 2%
-}
-ul{
+nav ul {
     display: flex;
     flex-direction: row;
     list-style: none;
 }
-li{
+nav li {
+    background: black;
+    padding: 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    border: 2px white solid;
     margin: 0px 1px;
 }
-.main{
+nav li:hover {
+    border: 2px grey solid;
+    background: white;
+}
+nav li:hover a {
+    color: black;
+}
+nav li#active {
+    background: grey;
+    color: white;
+    border: black 2px solid;
+}
+nav li#active:hover {
+    border-color: grey;
+}
+nav li#active:hover a {
+    color:white;
+}
+#navbutton {
+    display: none;
+}
+
+/* Основные страницы */
+main {
+    margin: auto;
+    min-height: 75vh;
+    max-width: 85%;
+    height: auto;
+    padding: 10px 0;
+}
+
+/* Home */
+main.home h1 {
+    border-bottom: 2px solid black;
+    margin-bottom: 20px;
+    font-size: 22px;
+}
+main.home {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-top: 10px;
+}
+main.home >  div {
+    line-height: 1.5;
+    padding: 10px;
+    max-width: 39vw;
+    width: 100%;
+}
+.info{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+.info a {
+    color: blue; 
+}
+.info a:hover {
+    text-decoration: underline;
+}
+.selftest {
+    display: grid;
+    grid-template-columns: max-content min-content;
+}
+.type {
+    margin-right: 5px;
+}
+
+/* History */
+main.history > div{
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid black;
+    margin: 10px;
+    line-height: 1.5;
+}
+main.history h1{
+    font-size: 22px;
+}
+main.history button, main.history input {
+    background: none;
+    border: none;
+    height: 30px;
+}
+main.history button:focus, main.history input:focus {
+    outline: none;
+}
+main.history button {
+    font-size: 12pt;
+    cursor: pointer;
+}
+main.history input {
+    font-size: 14pt;
+    width: 40px;
+    text-align: center;
+}
+
+/* Page 404 Not Found */
+body.notfound, html.notfound {
+    background: white;
+    color: white;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+main.notfound {
     background: black;
     width: 75vh;
     height: 75%;
@@ -84,82 +170,85 @@ li{
     border-radius: 10px;
     flex-wrap: wrap;
 }
-.text{
+.text {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
 }
-.text > *{
+.text > * {
     padding: 20px;
 }
-.error{
+.error {
     font-size: 10rem;
     margin: 10px;
 }
-.fas{
-    margin-right: 4px;
+a.notfound {
+    background: black;
+    padding: 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    border: 2px white solid;
+    color: white;
 }
-.forMobile{
-    display: none;
+a.notfound:hover {
+    border: 2px grey solid;
+    background: white;
+    color: black;
 }
+/* Оптимизация страницы 404 для смартфонов */
 @media (max-aspect-ratio: 9/10) {
-    .main{
+    main.notfound {
         width: 100%;
         height: 100%;
         border: none;
         border-radius: 0;
     }
 }
-@media (max-width: 701px) {
-    header{
+
+/* Мобильная версия */
+@media (max-width: 750px) {
+    /* Навигационная панель */
+    header {
         flex-direction: column;
         margin-top: 0;
     }
-    ul{
-        flex-direction: column;
-    }
-    nav, label#search{
+    nav {
         display: none;
     }
-    li, li#active, header label{
+    nav ul {
+        flex-direction: column;
+    }
+    nav li, nav li:hover, nav li#active, header label {
         border-radius: 0;
         margin: 0;
         border: 0;
     }
-    li:hover, li#active:hover, label#search:hover{
-        border: 0;
-    }
-    .forMobile{
-        display: block;
-        cursor: auto;
-    }
-    button{
+    header button {
         background: none;
         color: white;
         border: none;
         font-size: 16px;
         cursor: pointer;
     }
-    button .fas{
+    nav button .fas {
         min-width: 16px;
     }
-}
-@media (max-width: 1000px) and (min-width: 701px){
-    header, nav ul{
-        flex-wrap: wrap;
+    #navbutton {
+        display: block;
+        cursor: auto;
     }
-    nav ul{
-        width: 100%;
-        justify-content: space-between;
-    }
-    nav{
+
+    /* Основная страница */
+    main>  div {
+        max-width: 100%;
         width: 100%;
     }
-    li{
-        flex-grow: 1;
-    }
-    header label{
-        width: 100%;
+    .selftest{
+        grid-template-columns: auto min-content;
+    }    
+    .info{
+        grid-template-columns: max-content auto;
     }
 }
