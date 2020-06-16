@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
+    </head>
+    <body>
+        <script rel="text/javascript" src="script.js"></script>
+        <header>
+            <label id="navbutton"><button onclick="showMenu()"><i onclick="showMenu()" class="fas fa-bars"></i></button>Меню</label>
+            <nav id="nav">
+                <ul>
+                    <li id="active"><a href="home.html"><i class="fas fa-info-circle"></i>Общие сведения</a></li class="active">
+                    <li><a href="database.html"><i class="fas fa-database"></i>База данных</a></li>
+                    <li><a href="history.html"><i class="fas fa-history"></i>Журнал</a></li>
+                    <li><a href="settings.html"><i class="fas fa-cog"></i>Настройка</a></li>
+                </ul>
+            </nav>
+        </header>
+        <main class="home">
+            <div>
+                <H1>Информация об устойстве</H1>
+                <div class="info">
+                    <div class="type">Cостояние:</div>   <div class="green">отличное</div>
+                    <div class="type">Время:</div>       <div>17:45:58</div>
+                    <div class="type">Дата:</div>        <div>15.06.20</div>
+                    <div class="type">RAM:</div>         <div>загруженна на 30%</div>
+                    <div class="type">MCU:</div>         <div>Espressif ESP32 4MB</div>
+                    <div class="type">Сеть Wi-Fi:</div>  <div>Eltex</div>
+                    <div class="type">IP адрес:</div>    <div><a href="http://192.168.1.10">192.168.1.10</a></div>
+                    <div class="type">MAC адрес:</div>   <div>00:05:9A:3C:78:00</div>
+                    <div class="type">mDNS адрес:</div>  <div><a href="http://ac.local">ac.local</a></div>
+                    <div class="type">База данных:</div> <div><a href="http://192.168.1.15:8000/admin">192.168.1.15:8000</a></div>
+                    <div class="type">Версия ПО:</div>   <div>v1.0</div>   
+                </div>
+            </div>
+            <div>
+                <H1>Самодиагностика</H1>
+                <div class="selftest">
+                    <div><label class="green" for="sd">Web база данных: </label></div><div><input type="checkbox" id="database" checked onclick="return false;"></div>
+                    <div><label class="red" for="sd">SD карта памяти: </label></div><div><input type="checkbox" id="sd" onclick="return false;"></div>
+                    <div><label class="green" for="pin">Цифровая клавиатура: </label></div><div><input type="checkbox" id="pin" checked onclick="return false;"></div>
+                    <div><label class="green" for="rfid">Сканер RFID меток: </label></div><div><input type="checkbox" id="rfid" checked onclick="return false;"></div>
+                    <div><label class="green" for="fp" style="padding-right: 20px;">Сканер отпчатков пальцев: </label></div><div><input type="checkbox" id="fp" checked onclick="return false;"></div>
+                    <div><label class="green" for="rtc">Часы RTC: </label></div><div><input type="checkbox" id="rtc" checked onclick="return false;"></div>
+                    <div><label class="green" for="eeprom">EEPROM память: </label></div><div><input type="checkbox" id="eeprom" checked onclick="return false;"></div>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>
