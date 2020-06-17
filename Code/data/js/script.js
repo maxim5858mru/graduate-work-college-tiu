@@ -10,7 +10,7 @@ function showMenu() {
     }
 }
 
-// Установка в моообильной версии заголовка текущего раздела
+// Установка в мобильной версии заголовка текущего раздела
 window.onload = function ready() {
     navbutton.innerHTML = navbutton.innerHTML.slice(0, navbutton.innerHTML.indexOf("Меню")) + active.innerHTML.slice(active.innerHTML.indexOf("</i>")+4, active.innerHTML.indexOf("</a>"));
 };

@@ -77,7 +77,7 @@ nav li#active:hover a {
 main {
     margin: auto;
     min-height: 75vh;
-    max-width: 85%;
+    max-width: 620px;
     height: auto;
     padding: 10px 0;
 }
@@ -87,22 +87,26 @@ main.home h1 {
     border-bottom: 2px solid black;
     margin-bottom: 20px;
     font-size: 22px;
+    justify-content: space-between;
 }
 main.home {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: space-between;
     padding-top: 10px;
+}
+main.home > div.selftest_cont {
+    max-width: 240px;
 }
 main.home >  div {
     line-height: 1.5;
     padding: 10px;
-    max-width: 39vw;
+    max-width: 54%;
     width: 100%;
 }
 .info{
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 25px auto 1fr;
 }
 .info a {
     color: blue; 
@@ -112,39 +116,141 @@ main.home >  div {
 }
 .selftest {
     display: grid;
-    grid-template-columns: max-content min-content;
+    grid-template-columns: 25px auto min-content;
 }
 .type {
     margin-right: 5px;
 }
 
-/* History */
-main.history > div{
+/* Database */
+div.header {
     display: flex;
     justify-content: space-between;
     border-bottom: 2px solid black;
     margin: 10px;
+    margin-bottom: 20px;
     line-height: 1.5;
 }
-main.history h1{
+main.database h1 {
     font-size: 22px;
 }
-main.history button, main.history input {
+main.database .header button, main.database input#id {
     background: none;
     border: none;
     height: 30px;
 }
-main.history button:focus, main.history input:focus {
+main.database .header button:focus, main.database input#id:focus {
     outline: none;
 }
-main.history button {
+main.database button {
     font-size: 12pt;
     cursor: pointer;
 }
-main.history input {
+main.database input#id {
     font-size: 14pt;
     width: 40px;
     text-align: center;
+}
+input#id::-webkit-outer-spin-button,
+input#id::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+div.database {
+    display: grid;
+    grid-template-columns: 25px auto 1fr;
+    margin: 0px 10px;
+    align-items: center;
+    justify-content: space-between;
+}
+.database input {
+    border: solid black 2px;
+    border-radius: 5px;
+    text-align: center;
+    height: 20px;
+    margin: 3px 2px;
+}
+.database input[type="text"], 
+.database input[type="number"] {
+    width: 260px;
+    text-align: center;
+}
+div.rfid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin: 2px;
+    width: 263px;
+}
+.rfid input[type="number"] {
+    width: 45px;
+    margin: 2px 0;
+} 
+div.methods {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    line-height: 30px;
+    height: 30px;
+    width: 260px;
+} 
+.methods > label {
+    align-items: center;
+}
+.methods input {
+    height: 14px;
+}
+.database select {
+    text-align-last:center;
+    height: 24px;
+    border-radius: 5px;
+    border: 2px solid black;
+    background-color: white;
+    width: 111px;
+}
+.left {
+    margin-left: auto;
+}
+.button {
+    display: flex;
+    justify-content: center;
+}
+.button button {
+    margin: 10px 2px 0px 2px;
+    width: 130px;
+    height: 40px;
+    color:white;
+    border: 2px solid black;
+    border-radius: 10px;
+    background: black;
+    transition: 0.2s;
+}
+.button button:hover {
+    color:black;
+    border: 2px solid grey;
+    background: white;
+}
+
+/* History */
+div.history select {
+    width: 220px;
+    margin: 3px;
+}
+main.history div.left input[type="number"]{
+    width: 218px;
+}
+main.history div.button{
+    justify-content: flex-end;
+    margin-right: 10px;
+}
+input[type="date"],
+input[type="time"]{
+    width: auto;
+    background-color: white;
+    color: black;
+}
+input[type="date"]{
+    width: 120px;
 }
 
 /* Page 404 Not Found */
@@ -241,14 +347,58 @@ a.notfound:hover {
     }
 
     /* Основная страница */
-    main>  div {
+    /* Home */
+    main.home > div, main.home > div.selftest_cont {   
         max-width: 100%;
+    }
+    .selftest, .info {
         width: 100%;
     }
     .selftest{
-        grid-template-columns: auto min-content;
+        grid-template-columns: 25px auto min-content;
     }    
     .info{
-        grid-template-columns: max-content auto;
+        grid-template-columns: 25px max-content auto;
     }
+
+    /* Database */
+    main.database {
+        padding: 10px;
+    }
+    main.database > div:not(.button){
+        margin: 0 0 20px 0;
+    }
+    .database input[type="text"],
+    .database input[type="number"],
+    div.methods{
+        width: auto;
+    }
+    .database select{
+        width: 41%;
+    }
+    .left{
+        margin-left: 0;
+        width: unset;
+    }
+    .database input{
+        max-width: 100%;
+        min-width: 0;
+    }
+    .database input[type="text"],
+    .database input[type="number"]{
+        width: 98%;
+    }
+    .rfid{
+        width: auto;
+    }
+    .database .rfid input {
+        width: 40px;
+    }
+    /* History */
+    main.history div.database {
+        grid-template-columns: 25px 1fr auto;
+    }
+    main.history div.button{
+        margin-right: 0;
+    }    
 }
