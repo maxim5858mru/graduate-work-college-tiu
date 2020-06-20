@@ -4,56 +4,84 @@
 #include <Arduino.h>
 #include <SD.h>
 #include <ArduinoJson.h>
-#include <Adafruit_Fingerprint.h>
+#include <WiFiClient.h>
 #include <LiquidCrystal_I2C.h>
-#include <MFRC522.h>
-#include "../IIC/IIC.h"
+#include "../EEPROM/EEPROM.h"
+#include "../Keypad/Keypad.h"
+#include "../RFID/RFID.h"
+#include "../Fingerprint/Fingerprint.h"
+#include "../Clock/Clock.h"
 #include "../Timer/Timer.h"
+#include "../Routing/Routing.h"
+
+#define RELE0_PIN 26
+#define RELE1_PIN 25
+#define TONE_PIN  27
+
+#define SDWorking flags[0]
+
+extern byte openTime;                            
+extern bool flags[3];
+
+extern Keypad keypad;
+extern RFID rfid;
+extern FingerPrint fingerprint;
+extern LiquidCrystal_I2C lcd;
+extern Clock RTC;
+extern WiFiClient http;
 
 namespace Interface
 {
-  /** Измерение растояния до объекта, с помощью ультразвукового датчика
-   * @warning желательно чтобы объект меньше поглощал звуков
-   * @param trig - пин для отправки сигнала активации
-   * @param echo - пин для приёма ШИМ сигнала от датчика
-   * @return примерное растояние до объекта
-   */
-  long getDistance(uint8_t trig, uint8_t echo);
+	/** Измерение расстояния до объекта, с помощью ультразвукового датчика
+	 * @warning желательно чтобы объект меньше поглощал звуков
+	 * @param trig - пин для отправки сигнала активации
+	 * @param echo - пин для приёма ШИМ сигнала от датчика
+	 * @return примерное расстояние до объекта
+	 */
+	long getDistance(uint8_t trig, uint8_t echo);
 
-  // Сброс экрана
-  void goHome();
-  /** Открытие двери
-   * @param door - открываемая дверь
-   */
-  void open(uint8_t door);
-  /** Отказ в доступе
-   * @param byTime - причиной отказа является время?
-   */
-  void accessDeny(bool byTime);
+	// Сброс экрана
+	void goHome();
+	/** Открытие двери
+	 * @param door - открываемая дверь
+	 */
+	void open(uint8_t door);
+	// Отказ в доступе
+	void accessDeny();
+	/** Отказ в доступе
+	 * @param id - номер записи пользователя
+	 * @param byTime - причиной отказа является время?
+	 */
+	void accessDeny( int id, bool byTime);
 
-  /** Вывод пароля (точнее его изменения) на дисплей
-   * @param password - вводимый пароль
-   * @param becomeMore - пароль увеличился или уменьшился?
-   */
-  void showPassword(String password, bool becomeMore);
-  /** Считывание пароля
-   * @param nextAuth - является ли вызов функции вторичной проверкой?
-   * @return введённый PIN в виде строки
-   */
-  String readPassword(bool nextAuth = false);
-  /** Проверка пароля
-   * @remarks !!!!!Функция ещё не законченна, нужно подключить базу данных 
-   * @remarks Открытие двери происходит внутри функции
-   * @param password - проверяемый пароль
-   * @return !!!!!Учитывая что открытие двери просходит внутри функции, для чего возратное значение не знаю
-   */
-  bool checkPassword(String password);
+	/** Вывод пароля (точнее его изменения) на дисплей
+	 * @param password - вводимый пароль
+	 * @param becomeMore - пароль увеличился или уменьшился?
+	 */
+	void showPassword(String password, bool becomeMore);
+	/** Считывание пароля
+	 * @param nextAuth - является ли вызов функции вторичной проверкой?
+	 * @return введённый PIN в виде строки
+	 */
+	String readPassword(bool nextAuth = false);
+	/** Проверка пароля
+	 * @remarks Открытие двери происходит внутри функции
+	 * @param password - проверяемый пароль
+	 * @return !!!!!Учитывая что открытие двери просходит внутри функции, для чего возратное значение не знаю
+	 */
+	bool checkPassword(String password);
 
-  /** Получение и проверка NUID карты RFID
-   * @remarks !!!!!Функция ещё не законченна, нужно реализовать щагрузку базы с резервной копии
-   * @remarks Открытие двери происходит внутри функции
-   * @return !!!!!Учитывая что открытие двери просходит внутри функции, для чего возратное значение не знаю
-   */
-  bool checkAndGetRFID();
+	/** Получение и проверка NUID карты RFID
+	 * @remarks !!!!!Функция ещё не законченна, нужно реализовать загрузку базы с резервной копии на SD
+	 * @remarks Открытие двери происходит внутри функции
+	 * @return !!!!!Учитывая что открытие двери просходит внутри функции, для чего возратное значение не знаю
+	 */
+	bool checkAndGetRFID();
+
+	/** Проверка ID скана отпечатка
+	 * @param id - для передачи функции уже считаного значения
+	 * @return !!!!!Учитывая что открытие двери просходит внутри функции, для чего возратное значение не знаю
+	 */
+	bool checkFingerID(uint16_t id);
 }
 #endif

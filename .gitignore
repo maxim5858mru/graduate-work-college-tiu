@@ -1,13 +1,21 @@
-Code/.vscode
-Code/.gitignore
-Code/.pio
-Test Code/.pio
-Test Code/.vscode
-Test Code/.gitignore
-Altium Designer Project/History
-Altium Designer Project/__Previews
-Altium Designer Project/Template/__Previews
-Altium Designer Project/Library/History
+**/.vscode
+**/.pio
+**/History
+**/__Previews
 Altium Designer Project/Project Logs for Graduate Work
-Altium Designer Project/Project Outputs for Graduate Work/Gerber/__Previews
-Altium Designer Project/Project Outputs for Graduate Work/NC Drill/__Previews
+Server/*.egg-info
+Server/*.pot
+Server/*.py[co]
+Server/.idea/
+Server/.tox/
+**/__pycache__/
+Server/MANIFEST
+Server/dist/
+Server/docs/_build/
+Server/docs/locale/
+Server/node_modules/
+Server/tests/coverage_html/
+Server/tests/.coverage
+Server/build/
+Server/tests/report/
+Server/venv/

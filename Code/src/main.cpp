@@ -1,218 +1,198 @@
 #include <Arduino.h>
+#include <SPIFFS.h>
 #include <SD.h>
 #include <WiFiClient.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
-#include <ArduinoJson.h>
-#include <ArduinoOTA.h>
-#include "../lib/IIC/IIC.h"
+#include "../lib/EEPROM/EEPROM.h"
+#include "../lib/Clock/Clock.h"
+#include "../lib/Keypad/Keypad.h"
 #include "../lib/Timer/Timer.h"
 #include "../lib/Network/Network.h"
 #include "../lib/Routing/Routing.h"
 #include "../lib/Interface/Interface.h"
+#include "../lib/Initialization/Initialization.h"
 
-// Адреса модулей в шине IIC
-#define IIC_EEPROM 0x50
-#define IIC_CLOCK  0x68
-#define IIC_KEYPAD 0x20
-#define IIC_LCD    0x27
-
-// Адреса памяти
-#define EEPROM_ADDRESS_MDNS 385
-#define EEPROM_SIZE_MDNS 10
-
-// Индетификаторы настроек
+// Идентификаторы настроек
 #define NeedSerial settings[0]
 #define Buzzer settings[1]
 #define WiFiAP settings[2]
 #define ShowError settings[3]
 
-// Индетификаторы флагов
+// Идентификаторы флагов
 #define SDWorking flags[0]
 #define MDSNWorking flags[1]
-
-// Выводы МК, к которым подключены реле, кнопки и пьезодинамик
-#define RELE0_PIN   26
-#define RELE1_PIN   25
-#define BUTTON0_PIN 13
-#define BUTTON1_PIN 12
-#define TONE_PIN    27
+#define SPIFFSWorking flags[2]
 
 // Параметры загружаемые с EEPROM
 bool settings[8] = {
-  true,                                           // UART интерфейс
-  true,                                           // Динамик
-  true,                                           // Точка доступа
-  true                                            // Вывод ошибок через UART
+    true,                                         // UART интерфейс
+    true,                                         // Динамик
+    true,                                         // Точка доступа
+    true,                                         // Вывод ошибок через UART
+    true,                                         // Дверь №1
+    true                                          // Дверь №2
 };
+byte delayTime = 30;                              // Время работы таймера автоматической отключения подсветки 
+byte openTime = 5;                                // Время ожидания открытия двери
+int databaseCap = 10;                             // Ёмкость базы данных
+String hostURL = "";                              // Название хоста для Web-сервера
+String databaseURL = "";                          // Адрес базы данных
+// String databaseLogin = "";
+// String databasePass = "";
 
 // Флаги состояния
-bool flags[2] = {
-  false,                                          // SD
-  false                                           // MDNS
+bool flags[3] = {
+    false,                                        // SD
+    false,                                        // MDNS
+    false										  // SPIFFS
 };
 
-String host;
-
-EEPROM memory(IIC_EEPROM, 10000);                 // Память
-Keypad keypad(IIC_KEYPAD, KB4x4);                 // Клавиатура
-Clock RTC(IIC_CLOCK, false);                      // RTC часы
-LiquidCrystal_I2C lcd(IIC_LCD, 16, 2);            // Дисплей
-MFRC522 rfid(14, 2);                              // Считыватель RFID карт
-AsyncWebServer server(80);                        // Веб сервер
+EEPROM memory(0x50, 10000);                       // Память
+Keypad keypad(0x20, KB4x4);                       // Клавиатура
+RFID rfid(14, 2);	                              // Считыватель RFID карт
+FingerPrint fingerprint(&Serial2);				  // Сканер отпечатков пальцев
+Clock RTC(0x68, false);                           // RTC часы
 Timer timer;                                      // Таймер
+LiquidCrystal_I2C lcd(0x27, 16, 2);               // Дисплей
+AsyncWebServer server(80);                        // Веб сервер
 WiFiClient http;                                  // Клиент для различных обращений к другим серверам
-
-void open()                                       // Прерывание на открытие двери при нажатии кнопки
-{
-  ESP.restart();                                  //!!!!! Чтобы написать нормальное прерывание необходимо отключить Watchdog для Arduino Core в ESP-IDF
-}
 
 void setup()
 {
-  // Инициализция обязательных компонентов
-  memory.begin(IIC_EEPROM);
-  SPI.begin();  // Для сканера меток
-  rfid.PCD_Init(); 
-  lcd.init();
-  keypad.begin();
+    /* 1 этап - Инициализация обязательных компонентов */
+    lcdInit();
+    componentsInit();
 
-  // Получение настроек с памяти
-  if (memory.status) for (int i = 0; i < 8; i++) {settings[i] = memory.readbit(i, 0);}
+    /* 2 этап - Псевдо-прерывание */
+    setInterrupt();
+    writeLoadCent(60);
 
-  // Инициализация компонентов
-  if (NeedSerial) {Serial.begin(115200);}         // UART
-  ledcSetup(0, 1000, 8);                          // Настройка ШИМ для пьезодинамика
-  if (Buzzer) {ledcWrite(0, 200);}
-  else {ledcWrite(0, 0);}            
-  if (SD.begin() && SD.cardType() != CARD_NONE && SD.cardType() != CARD_UNKNOWN) {SDWorking = true;}// Монтирование файловой системы
-  else if (ShowError) {Serial.println("Error mounting SD");}
+    /* 3 этап - Настройка Wi-Fi */
+    if (memory.status) {
+        Network::setupWiFi();
+    } 
+    else {
+        Network::presetupWiFi();                  // Создание точки доступа с предустановленными значениями
+    }            
+    setLoadFlag(6, WiFi.isConnected()?"+":"-");
+    writeLoadCent(70);
 
-  /*!!!!! Временно !!!!!*/
-  /* Псевдо-прерывание */
-  pinMode(BUTTON0_PIN, INPUT);                                             // Настройка выводов МК для прерывания
-  // pinMode(BUTTON1_PIN, INPUT);
-  pinMode(RELE0_PIN, OUTPUT);
-  pinMode(RELE1_PIN, OUTPUT);
-  digitalWrite(RELE0_PIN, HIGH);
-  digitalWrite(RELE1_PIN, HIGH);
-  if (digitalRead(BUTTON0_PIN) == LOW) {Interface::open(0);}               // Псевдо-проверка
-  // else if (digitalRead(BUTTON1_PIN) == LOW) {Interface::open(1);}
-  attachInterrupt(digitalPinToInterrupt(BUTTON0_PIN), open, FALLING);
-  // attachInterrupt(digitalPinToInterrupt(BUTTON1_PIN), open, FALLING);
-
-  // Настройка Wi-Fi
-  if (memory.status) {Network::setupWiFi();}
-  else {Network::presetupWiFi();}                                          // Создание точки доступа с предустановленными значениями
-
-  // Сихронизация часов
-  RTC.begin();
-  RTC.sync(http);
-
-  // Настройка Web сервера
-  if (SDWorking && WiFi.status() == WL_CONNECTED) 
-  {
-    if (memory.status)                            // Включение MDNS
-    {
-      host = memory.readString(EEPROM_SIZE_MDNS, EEPROM_ADDRESS_MDNS);
-      if (!host.isEmpty() && MDNS.begin(host.c_str())) 
-      {
-        if (NeedSerial) {Serial.println("MDNS включён, локальный адресс: http://" + String(host) + ".local/");}
-        MDSNWorking = true;
-      }
+    /* 4 этап - Web-сервер */
+    setLoadFlag(5, RTC.begin()?"+":"-");		  // Инициализация часов
+    if (WiFi.isConnected()) {					  // Синхронизация часов
+        RTC.sync(http);
     }
+    writeLoadCent(72);
 
-    // Настройка маршрутизации сервера
-
-    // HTML
-    server.onNotFound(handleNotFound);
-    server.on("/", HTTP_GET, handleNotFound);                 
-
-    // JS & CSS
-    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(SD, "/style.css", "text/css");
-    });
-    server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(SD, "/script.js", "text/javascript");
-    });
-
-    // Используемые плагины
-    server.on("/FontAwsome/font-awsome all.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(SD, "/FontAwsome/font-awsome all.css", "text/css");
-    });
-    server.on("/FontAwsome/fa-solid-900.woff2", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(SD, "/FontAwsome/fa-solid-900.woff2", "font/woff");
-    });
-    server.on("/FontAwsome/fa-solid-900.svg", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(SD, "/FontAwsome/fa-solid-900.svg", "image/svg+xml");
-    });
-
-    server.begin();
-    if (MDSNWorking) {MDNS.addService("http", "tcp", 80);}
-
-    // Обновление по сети
-    ArduinoOTA.onStart([]                                                           
+    // Настройка Web сервера
+    if (SPIFFSWorking && WiFi.status() == WL_CONNECTED) 
     {
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH) {type = "sketch";}
-      else {type = "filesystem";}
-    });
-    ArduinoOTA.begin();
-  }
+        if (memory.status)                        // Включение MDNS
+        {
+            if (!hostURL.isEmpty() && MDNS.begin(hostURL.c_str())) 
+            {
+                if (NeedSerial) {
+                    Serial.println("MDNS is enabled, the local address: http://" + String(hostURL) + ".local/");
+                }
+                MDSNWorking = true;
+            }
+        }
+        writeLoadCent(75);
 
-  lcd.noBacklight();
-  Interface::goHome();
+        setRouting();							  // Настройка маршрутизации сервера
+        writeLoadCent(85);
+
+        // Включение сервера
+        server.begin();
+        if (MDSNWorking) {
+            MDNS.addService("http", "tcp", 80);
+        }
+        writeLoadCent(90);
+    }
+    showResultTest();
+    writeLoadCent(100);
+    delay(500);
+
+    // Сброс дисплея
+    lcd.noBacklight();
+    Interface::goHome();
 }
 
 void loop()
 {
-  ArduinoOTA.handle();
-  
-  // Проверка растояния 
-  if (Interface::getDistance(15, 4) < 60 || timer.timerIsWorking())        // Для энергии на подсветке
-  {
-    // Таймер постоянно сбразывается, если человек стоит поблизости
-    if (Interface::getDistance(15, 4) < 60) 
+    // Проверка расстояния 
+    if (Interface::getDistance(15, 4) < 60 || timer.timerIsWorking())      // Для энергии на подсветке
     {
-      timer.timerCheckAndStop();
-      timer.timerStart(10);
+        // Таймер постоянно сбрасывается, если человек стоит поблизости
+        if (Interface::getDistance(15, 4) < 60) 
+        {
+            timer.timerCheckAndStop();
+            timer.timerStart(delayTime);
+        }
+        
+        lcd.backlight();
+
+        // Получение значения с клавиатуры
+        keypad.read();                                
+        if (keypad.state == ON_PRESS) switch (keypad.Numb)
+        {
+            //Режим ввода ПИН-кода
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+                Interface::checkPassword(Interface::readPassword());
+                Interface::goHome();
+
+                break;
+            //Вход в меню
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+                lcd.clear();
+                lcd.setCursor(0, 0);
+                lcd.print("Menu");
+            default:
+                break;
+        }
+
+        // RFID
+        if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {  // Если карта поднесена только что и считывание удалось, то выполняем проверку
+            Interface::checkAndGetRFID();
+        }
+
+        //Fingerprint
+        uint16_t fingerID = fingerprint.read();
+        if ((fingerID >= 1) && (fingerID <= 130)) {
+            Interface::checkFingerID(fingerID);
+        }
+        else if (fingerID == 0xFF00) {
+            int z = 1;
+            while ((fingerID == 0xFF00 || fingerID == 0xFFFF) && z < 10)
+            {
+                fingerID = fingerprint.read();
+                z++;
+            }
+            if ((fingerID >= 1) && (fingerID <= 130)) {
+                Interface::checkFingerID(fingerID);
+            }
+            else {
+                Interface::accessDeny();
+            }
+        }
+        else {
+            delay(50);
+        }
     }
-    
-    lcd.backlight();
-
-    // Получение значения с клавиатуры
-    keypad.read();                                
-    if (keypad.state == ON_PRESS) switch (keypad.Numb)
-    {
-      //Режим ввода ПИН-кода
-      case 0:
-      case 1:
-      case 2:
-      case 3:
-      case 4:
-      case 5:
-      case 6:
-      case 7:
-      case 8:
-      case 9:
-        Interface::checkPassword(Interface::readPassword());
-        Interface::goHome();
-
-        break;
-      //Вход в меню
-      case 10:
-      case 11:
-      case 12:
-      case 13:
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Menu");
-      default:
-        break;
+    else {
+        lcd.noBacklight();
     }
-
-    // RFID
-    if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {Interface::checkAndGetRFID();} // Если карта поднесена только что и считывание удалось, то выполняем проверку
-  }
-  else {lcd.noBacklight();}
 }

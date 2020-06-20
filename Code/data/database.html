@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
+    </head>
+    <body>
+        <script rel="text/javascript" src="js/script.js"></script>
+        <header>
+            <label id="navbutton"><button onclick="showMenu()"><i onclick="showMenu()" class="fas fa-bars"></i></button>Меню</label>
+            <nav id="nav">
+                <ul>
+                    <li><a href="home.html"><i class="fas fa-info-circle"></i>Общие сведения</a></li class="active">
+                    <li id="active"><a href="database.html"><i class="fas fa-database"></i>База данных</a></li>
+                    <li><a href="history.html"><i class="fas fa-history"></i>Журнал</a></li>
+                    <li><a href="settings.html"><i class="fas fa-cog"></i>Настройка</a></li>
+                </ul>
+            </nav>
+        </header>
+        <main class="database">
+            <div class="header">
+                <H1>База данных</H1> 
+                <div>
+                    <button><i class="fas fa-arrow-left"></i></button>ID:<input id="id" type="number" title="№" value="1" onchange="readDatabase(value);"><button><i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+            <div class="database">
+                <div><i class="far fa-user"></i></div>
+                <div><label>Имя: </label></div>
+                <div class="left"><input type="text" id="fname"></div>
+
+                <div></div>
+                <div><label>Фамиля: </label></div>
+                <div class="left"><input type="text" id="lname"></div>
+
+                <div></div>
+                <div><label>Отчество: </label></div>
+                <div class="left"><input type="text" id="mname"></div>
+
+                <div><i class="fas fa-door-open"></i></div>
+                <div><label>Дверь: </label></div>
+                <div class="left"><input type="number" id="door"></div>
+
+                <div><i class="far fa-clock"></i></div>
+                <div><label>Время: </label></div>
+                <div class="left">
+                    <input type="time" id="stime">
+                    <input type="time" id="etime"> 
+                    <select>
+                        <option 1>Все дни</option>
+                        <option 2>Понедельник</option>
+                        <option 3>Вторник</option>
+                        <option 4>Среда</option>
+                        <option 5>Четверг</option>
+                        <option 6>Пятица</option>
+                        <option 7>Суббота</option>
+                        <option 8>Воскресенье</option>
+                    </select>
+                </div>
+
+                <div><i class="fas fa-shield-alt"></i></div>
+                <div>Методы:</div>
+                <div class="left">
+                    <div class="methods">
+                        <label>ПИН <input type="checkbox" name="" id="mPIN" onchange="changePIN()"></label>
+                        <label>RFID <input type="checkbox" name="" id="mRFID" onchange="changeRFID()"></label>
+                        <label>FP <input type="checkbox" name="" id="mFP" onchange="changeFP()"></label>
+                    </div>
+                </div>
+
+                <div><i class="far fa-keyboard"></i></div>
+                <div><label>ПИН-код: </label></div>
+                <div class="left"><input type="number" id="pin"></div>
+
+                <div><i class="far fa-address-card"></i></div>
+                <div>Номер RFID карты: </div>
+                <div class="left">
+                    <div class="rfid">
+                        <input class="rfid_data" type="number">
+                        <input class="rfid_data" type="number">
+                        <input class="rfid_data" type="number">
+                        <input class="rfid_data" type="number">
+                        <input class="rfid_data" type="number">
+                        <input class="rfid_data" type="number">
+                        <input class="rfid_data" type="number">
+                        <input class="rfid_data" type="number">
+                        <input class="rfid_data" type="number">
+                        <input class="rfid_data" type="number">
+                    </div> 
+                </div>
+
+                <div><i class="fas fa-fingerprint"></i></div>
+                <div><label>ID отпечатка: </label></div>
+                <div class="left">                    
+                    <input type="number" id="fp">
+                </div>
+            </div>
+            <div class="button">
+                <button onclick="putEntry();"><i class="fas fa-save"></i>Сохранить</button>
+                <button onclick="deleteEntry();" id="buttonDel"><i class="fas fa-trash-alt"></i>Удалить</button>
+            </div>
+            <script rel="text/javascript" src="js/database.js"></script>
+        </main>
+    </body>
+</html>

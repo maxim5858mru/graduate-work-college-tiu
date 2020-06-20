@@ -1,17 +1,35 @@
-*{
+* {
     padding: 0;
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
 }
-body.NotFound, html.NotFound{
-    background: white;
+a {
+    text-decoration: none;
     color: white;
-    height: 100%;
-    width: 100%;
-    display: flex;
-    align-items: center;
 }
-a.NotFound, li, header label{
+h1, h2, h3, h4, h5, h6
+{
+    font-weight: normal;
+}
+.red{
+    color:red;
+}
+.green{
+    color:green;
+}
+.fas {
+    margin-right: 4px;
+}
+
+/* Стили навигационной панели */
+header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    margin: 2% 0%;
+}
+header label {
+    color: white;
     background: black;
     padding: 15px;
     border-radius: 10px;
@@ -19,58 +37,232 @@ a.NotFound, li, header label{
     transition: 0.2s;
     border: 2px white solid;
 }
-nav a,a.NotFound{
-    text-decoration: none;
-}
-nav a, a.NotFound, header label, label#search input{
-    color: white;
-}
-label#search{
-    cursor: auto;
-}
-a.NotFound:hover, li:hover, label#search:hover{
-    border: 2px grey solid;
-    background: white;
-}
-a.NotFound:hover, li:hover a, label#search:hover, label#search:hover input{
-    color: black;
-}
-li#active:hover a{
-    color:white;
-}
-input[type=search]{
-    background: none;
-    border: none;
-}
-input[type=search]:focus, header button{
-    outline: none;
-}
-li#active{
-    background: grey;
-    color: white;
-    border: black 2px solid;
-}
-li#active:hover{
-    border-color: grey;
-}
-input[type=search]{
-    cursor: auto;
-}
-header{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    margin-top: 2%
-}
-ul{
+nav ul {
     display: flex;
     flex-direction: row;
     list-style: none;
 }
-li{
+nav li {
+    background: black;
+    padding: 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    border: 2px white solid;
     margin: 0px 1px;
 }
-.main{
+nav li:hover {
+    border: 2px grey solid;
+    background: white;
+}
+nav li:hover a {
+    color: black;
+}
+nav li#active {
+    background: grey;
+    color: white;
+    border: black 2px solid;
+}
+nav li#active:hover {
+    border-color: grey;
+}
+nav li#active:hover a {
+    color:white;
+}
+#navbutton {
+    display: none;
+}
+
+/* Основные страницы */
+main {
+    margin: auto;
+    min-height: 75vh;
+    max-width: 620px;
+    height: auto;
+    padding: 10px 0;
+}
+
+/* Home */
+main.home h1 {
+    border-bottom: 2px solid black;
+    margin-bottom: 20px;
+    font-size: 22px;
+    justify-content: space-between;
+}
+main.home {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding-top: 10px;
+}
+main.home > div.selftest_cont {
+    max-width: 240px;
+}
+main.home >  div {
+    line-height: 1.5;
+    padding: 10px;
+    max-width: 54%;
+    width: 100%;
+}
+.info{
+    display: grid;
+    grid-template-columns: 25px auto 1fr;
+}
+.info a {
+    color: blue; 
+}
+.info a:hover {
+    text-decoration: underline;
+}
+.selftest {
+    display: grid;
+    grid-template-columns: 25px auto min-content;
+}
+.type {
+    margin-right: 5px;
+}
+
+/* Database */
+div.header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid black;
+    margin: 10px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+main.database h1 {
+    font-size: 22px;
+}
+main.database .header button, main.database input#id {
+    background: none;
+    border: none;
+    height: 30px;
+}
+main.database .header button:focus, main.database input#id:focus {
+    outline: none;
+}
+main.database button {
+    font-size: 12pt;
+    cursor: pointer;
+}
+main.database input#id {
+    font-size: 14pt;
+    width: 40px;
+    text-align: center;
+}
+input#id::-webkit-outer-spin-button,
+input#id::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+div.database {
+    display: grid;
+    grid-template-columns: 25px auto 1fr;
+    margin: 0px 10px;
+    align-items: center;
+    justify-content: space-between;
+}
+.database input {
+    border: solid black 2px;
+    border-radius: 5px;
+    text-align: center;
+    height: 20px;
+    margin: 3px 2px;
+}
+.database input[type="text"], 
+.database input[type="number"] {
+    width: 260px;
+    text-align: center;
+}
+div.rfid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin: 2px;
+    width: 263px;
+}
+.rfid input[type="number"] {
+    width: 45px;
+    margin: 2px 0;
+} 
+div.methods {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    line-height: 30px;
+    height: 30px;
+    width: 260px;
+} 
+.methods > label {
+    align-items: center;
+}
+.methods input {
+    height: 14px;
+}
+.database select {
+    text-align-last:center;
+    height: 24px;
+    border-radius: 5px;
+    border: 2px solid black;
+    background-color: white;
+    width: 111px;
+}
+.left {
+    margin-left: auto;
+}
+.button {
+    display: flex;
+    justify-content: center;
+}
+.button button {
+    margin: 10px 2px 0px 2px;
+    width: 130px;
+    height: 40px;
+    color:white;
+    border: 2px solid black;
+    border-radius: 10px;
+    background: black;
+    transition: 0.2s;
+}
+.button button:hover {
+    color:black;
+    border: 2px solid grey;
+    background: white;
+}
+
+/* History */
+div.history select {
+    width: 220px;
+    margin: 3px;
+}
+main.history div.left input[type="number"]{
+    width: 218px;
+}
+main.history div.button{
+    justify-content: flex-end;
+    margin-right: 10px;
+}
+input[type="date"],
+input[type="time"]{
+    width: auto;
+    background-color: white;
+    color: black;
+}
+input[type="date"]{
+    width: 120px;
+}
+
+/* Page 404 Not Found */
+body.notfound, html.notfound {
+    background: white;
+    color: white;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+main.notfound {
     background: black;
     width: 75vh;
     height: 75%;
@@ -84,82 +276,129 @@ li{
     border-radius: 10px;
     flex-wrap: wrap;
 }
-.text{
+.text {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
 }
-.text > *{
+.text > * {
     padding: 20px;
 }
-.error{
+.error {
     font-size: 10rem;
     margin: 10px;
 }
-.fas{
-    margin-right: 4px;
+a.notfound {
+    background: black;
+    padding: 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    border: 2px white solid;
+    color: white;
 }
-.forMobile{
-    display: none;
+a.notfound:hover {
+    border: 2px grey solid;
+    background: white;
+    color: black;
 }
+/* Оптимизация страницы 404 для смартфонов */
 @media (max-aspect-ratio: 9/10) {
-    .main{
+    main.notfound {
         width: 100%;
         height: 100%;
         border: none;
         border-radius: 0;
     }
 }
-@media (max-width: 701px) {
-    header{
+
+/* Мобильная версия */
+@media (max-width: 750px) {
+    /* Навигационная панель */
+    header {
         flex-direction: column;
         margin-top: 0;
     }
-    ul{
-        flex-direction: column;
-    }
-    nav, label#search{
+    nav {
         display: none;
     }
-    li, li#active, header label{
+    nav ul {
+        flex-direction: column;
+    }
+    nav li, nav li:hover, nav li#active, header label {
         border-radius: 0;
         margin: 0;
         border: 0;
     }
-    li:hover, li#active:hover, label#search:hover{
-        border: 0;
-    }
-    .forMobile{
-        display: block;
-        cursor: auto;
-    }
-    button{
+    header button {
         background: none;
         color: white;
         border: none;
         font-size: 16px;
         cursor: pointer;
     }
-    button .fas{
+    nav button .fas {
         min-width: 16px;
     }
-}
-@media (max-width: 1000px) and (min-width: 701px){
-    header, nav ul{
-        flex-wrap: wrap;
+    #navbutton {
+        display: block;
+        cursor: auto;
     }
-    nav ul{
-        width: 100%;
-        justify-content: space-between;
+
+    /* Основная страница */
+    /* Home */
+    main.home > div, main.home > div.selftest_cont {   
+        max-width: 100%;
     }
-    nav{
-        width: 100%;
-    }
-    li{
-        flex-grow: 1;
-    }
-    header label{
+    .selftest, .info {
         width: 100%;
     }
+    .selftest{
+        grid-template-columns: 25px auto min-content;
+    }    
+    .info{
+        grid-template-columns: 25px max-content auto;
+    }
+
+    /* Database */
+    main.database {
+        padding: 10px;
+    }
+    main.database > div:not(.button){
+        margin: 0 0 20px 0;
+    }
+    .database input[type="text"],
+    .database input[type="number"],
+    div.methods{
+        width: auto;
+    }
+    .database select{
+        width: 41%;
+    }
+    .left{
+        margin-left: 0;
+        width: unset;
+    }
+    .database input{
+        max-width: 100%;
+        min-width: 0;
+    }
+    .database input[type="text"],
+    .database input[type="number"]{
+        width: 98%;
+    }
+    .rfid{
+        width: auto;
+    }
+    .database .rfid input {
+        width: 40px;
+    }
+    /* History */
+    main.history div.database {
+        grid-template-columns: 25px 1fr auto;
+    }
+    main.history div.button{
+        margin-right: 0;
+    }    
 }

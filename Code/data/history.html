@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
+    </head>
+    <body>
+        <script rel="text/javascript" src="js/script.js"></script>
+        <header>
+            <label id="navbutton"><button onclick="showMenu()"><i onclick="showMenu()" class="fas fa-bars"></i></button>Меню</label>
+            <nav id="nav">
+                <ul>
+                    <li><a href="home.html"><i class="fas fa-info-circle"></i>Общие сведения</a></li class="active">
+                    <li><a href="database.html"><i class="fas fa-database"></i>База данных</a></li>
+                    <li id="active"><a href="history.html"><i class="fas fa-history"></i>Журнал</a></li>
+                    <li><a href="settings.html"><i class="fas fa-cog"></i>Настройка</a></li>
+                </ul>
+            </nav>
+        </header>
+        <main class="database history">
+            <div class="header">
+                <H1>Журнал</H1> 
+                <div>
+                    <button><i class="fas fa-arrow-left"></i></button>ID:<input id="id" type="number" title="№" value="1" onchange="readDatabase(value);"><button><i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+            <div class="database">
+                <div><i class="fas fa-exclamation"></i></div>
+                <div><label>Тип события: </label></div>
+                <div class="left history">
+                    <select disabled id="etype">
+                        <option value = 0>Успешная авторизация</option>
+                        <option value = 1>Открытие двери</option>
+                        <option value = 2>Первичная ошибка</option>
+                        <option value = 3>Вторичная ошибка</option>
+                        <option value = 4>Ошибка по времени</option>
+                    </select>
+                </div>
+
+                <div><i class="far fa-user"></i></div>
+                <div><label>ID пользователя:</label></div>
+                <div class="left"><input type="number" readonly id="userID"></div>
+
+                <div><i class="fas fa-door-open"></i></div>
+                <div><label>Дверь: </label></div>
+                <div class="left"><input type="number" readonly id="door"></div>
+
+                <div><i class="far fa-clock"></i></div>
+                <div><label>Время: </label></div>
+                <div class="left">
+                    <input type="time" readonly id="time">
+                    <input type="date" readonly id="date"> 
+                </div>
+            </div>
+            <div class="button">
+                <button onclick="deleteEntry();"><i class="fas fa-trash-alt"></i>Удалить</button>
+            </div>
+            <script rel="text/javascript" src="js/history.js"></script>
+        </main>
+    </body>
+</html>
